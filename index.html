@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>📸 Фотокамера</title>
+    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#764ba2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="📸 Камера">
+</head>
+<body>
+    <div class="container">
+        <header class="mobile-header">
+            <div class="header-content">
+                <h1>📸 Фотокамера</h1>
+                <div class="clock" id="clock"></div>
+            </div>
+            
+
+            
+
+        </header>
+        
+        <main class="mobile-main">
+            <div class="camera-section">
+                <div class="video-container">
+                    <video id="video" autoplay muted playsinline></video>
+                    <canvas id="canvas" style="display: none;"></canvas>
+                    
+                    <!-- Мобільні кнопки камери з різними стилями -->
+                    <div class="mobile-camera-controls">
+                        <button id="captureBtn" class="mobile-capture-btn btn-style-1">
+                            <span class="capture-icon">📷</span>
+                        </button>
+                        <button id="switchCameraBtn" class="mobile-switch-btn camera-switch-btn btn-style-2">
+                            <span class="switch-icon">🤳</span>
+                        </button>
+                        <button id="flashBtn" class="mobile-flash-btn btn-style-3">
+                            <span class="flash-icon">⚡</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Індикатор камери -->
+                    <div class="camera-indicator">
+                        <div class="camera-dot"></div>
+                        <span>Камера активна</span>
+                    </div>
+                </div>
+                
+                <!-- Десктопні кнопки з різними стилями -->
+                <div class="desktop-controls">
+                    <button id="captureBtnDesktop" class="btn btn-primary btn-style-1">
+                        📷 Зробити фото
+                    </button>
+                    <button id="switchCameraBtnDesktop" class="btn btn-secondary btn-style-2">
+                        🔄 Змінити камеру
+                    </button>
+                    <button id="flashBtnDesktop" class="btn btn-accent btn-style-3">
+                        ⚡ Спалах
+                    </button>
+                </div>
+            </div>
+            
+            <div class="gallery-section">
+                <div class="gallery-header">
+                    <h2>📁 Галерея</h2>
+                    <div class="gallery-controls">
+                        <button id="clearGalleryBtn" class="clear-btn btn-style-4">🗑️ Очистити</button>
+                        <button id="downloadAllBtn" class="download-btn btn-style-5">⬇️ Завантажити всі</button>
+                        <button id="saveToDeviceBtn" class="save-device-btn btn-style-1">💾 Зберегти на пристрій</button>
+                        <button id="slideshowGalleryBtn" class="slideshow-gallery-btn btn-style-3">🎬 Слайд-шоу</button>
+                    </div>
+                </div>
+                <div class="gallery" id="gallery"></div>
+            </div>
+        </main>
+        
+        <footer class="mobile-footer">
+            <p>Створено з ❤️ для фотографування</p>
+        </footer>
+    </div>
+    
+    <!-- Мобільне меню з різними стилями -->
+    <div class="mobile-menu">
+        <div class="menu-item active" data-section="camera">
+            <span class="menu-icon">📷</span>
+            <span class="menu-text">Камера</span>
+        </div>
+        <div class="menu-item" data-section="gallery">
+            <span class="menu-icon">🖼️</span>
+            <span class="menu-text">Галерея</span>
+        </div>
+        <div class="menu-item" data-section="settings">
+            <span class="menu-icon">⚙️</span>
+            <span class="menu-text">Налаштування</span>
+        </div>
+    </div>
+    
+    <!-- Панель налаштувань -->
+    <div class="settings-panel" id="settingsPanel" style="display: none;">
+        <div class="settings-content">
+            <h3>⚙️ Налаштування</h3>
+            
+            <div class="setting-group">
+                <h4>🎨 Стиль кнопок</h4>
+                <div class="button-style-selector">
+                    <button class="style-btn active" data-style="1">Стиль 1</button>
+                    <button class="style-btn" data-style="2">Стиль 2</button>
+                    <button class="style-btn" data-style="3">Стиль 3</button>
+                    <button class="style-btn" data-style="4">Стиль 4</button>
+                    <button class="style-btn" data-style="5">Стиль 5</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h4>🌈 Теми оформлення</h4>
+                <div class="theme-selector">
+                    <button class="theme-btn" data-theme="default">🌞 Світла</button>
+                    <button class="theme-btn" data-theme="dark">🌙 Темна</button>
+                    <button class="theme-btn" data-theme="ocean">🌊 Океан</button>
+                    <button class="theme-btn" data-theme="forest">🌲 Ліс</button>
+                    <button class="theme-btn" data-theme="sunset">🌅 Захід</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h4>📱 Налаштування камери</h4>
+                <div class="camera-settings">
+                    <label class="setting-item">
+                        <span>🤳 Використовувати передню камеру</span>
+                        <input type="checkbox" id="frontCameraEnabled" onchange="app.toggleCameraFacing()">
+                    </label>
+                    <div class="camera-info">
+                        <small>Поточна камера: <span id="currentCameraInfo">Передня (селфі)</span></small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <h4>💧 Водяні знаки</h4>
+                <label class="setting-item">
+                    <input type="checkbox" id="watermarkEnabled" checked>
+                    <span>Додавати водяні знаки</span>
+                </label>
+                <label class="setting-item">
+                    <input type="checkbox" id="showDateTime" checked>
+                    <span>Показувати час та дату</span>
+                </label>
+                <label class="setting-item">
+                    <input type="checkbox" id="showOwner" checked>
+                    <span>Показувати власницю програми</span>
+                </label>
+                <div class="watermark-preview">
+                    <h5>Попередній перегляд:</h5>
+                    <div class="preview-text">
+                        <div id="previewDateTime">📅 15 грудня 2024, 14:30:25</div>
+                        <div id="previewOwner">👑 Власниця програми Катерина Миколаївна</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <h4>🎨 Фільтри ретро-часу</h4>
+                <div class="filter-selector">
+                    <button class="filter-btn active" data-filter="none">Без фільтра</button>
+                    <button class="filter-btn" data-filter="retro90s">90-ті роки</button>
+                    <button class="filter-btn" data-filter="retro2000s">2000-ні роки</button>
+                    <button class="filter-btn" data-filter="vintage">Вінтаж</button>
+                    <button class="filter-btn" data-filter="sepia">Сепія</button>
+                </div>
+                <div class="filter-preview">
+                    <h5>Попередній перегляд фільтра:</h5>
+                    <div class="filter-preview-image">
+                        <img id="filterPreviewImg" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2Y0ZjRmNCIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+UHJldmlldzwvdGV4dD48L3N2Zz4=" alt="Попередній перегляд">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <h4>🎬 Слайд-шоу</h4>
+                <label class="setting-item">
+                    <input type="checkbox" id="slideshowEnabled">
+                    <span>Увімкнути слайд-шоу</span>
+                </label>
+                <div class="slideshow-controls" id="slideshowControls" style="display: none;">
+                    <label class="setting-item">
+                        <span>Швидкість (сек):</span>
+                        <input type="range" id="slideshowSpeed" min="1" max="10" value="3" class="speed-slider">
+                        <span id="speedValue">3</span>
+                    </label>
+                    <div class="slideshow-buttons">
+                        <button class="slideshow-btn play-btn" id="playSlideshow">▶️ Грати</button>
+                        <button class="slideshow-btn pause-btn" id="pauseSlideshow" style="display: none;">⏸️ Пауза</button>
+                        <button class="slideshow-btn stop-btn" id="stopSlideshow">⏹️ Стоп</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <h4>💾 Збереження</h4>
+                <label class="setting-item">
+                    <input type="checkbox" id="autoSave" checked>
+                    <span>Автозбереження у браузері</span>
+                </label>
+                <label class="setting-item">
+                    <input type="checkbox" id="autoSaveToDevice">
+                    <span>Автоматично зберігати на пристрій</span>
+                </label>
+                <label class="setting-item">
+                    <input type="checkbox" id="highQuality">
+                    <span>Висока якість збереження</span>
+                </label>
+            </div>
+            
+            <div class="setting-group">
+                <h4>📍 Геолокація та контекст</h4>
+                <label class="setting-item">
+                    <input type="checkbox" id="gpsEnabled">
+                    <span>Зберігати GPS координати</span>
+                </label>
+                <label class="setting-item">
+                    <input type="checkbox" id="weatherEnabled">
+                    <span>Зберігати погодні умови</span>
+                </label>
+                <label class="setting-item">
+                    <input type="checkbox" id="calendarEnabled">
+                    <span>Зв'язок з подіями календаря</span>
+                </label>
+                <div class="location-preview" id="locationPreview" style="display: none;">
+                    <h5>Поточне місцезнаходження:</h5>
+                    <div class="location-info">
+                        <div id="currentLocation">📍 Визначення місцезнаходження...</div>
+                        <div id="currentWeather">🌤️ Завантаження погоди...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <h4>🔧 Додаткові налаштування</h4>
+                <label class="setting-item">
+                    <input type="checkbox" id="soundEffects">
+                    <span>Звукові ефекти</span>
+                </label>
+                <label class="setting-item">
+                    <input type="checkbox" id="showNotifications">
+                    <span>Показувати повідомлення</span>
+                </label>
+            </div>
+            
+            <button class="close-settings btn-style-1">Закрити</button>
+        </div>
+    </div>
+    
+    <!-- Модальне вікно для перегляду фотографій на повний екран -->
+    <div class="photo-viewer-modal" id="photoViewerModal" style="display: none;">
+        <div class="photo-viewer-content">
+            <!-- Кнопка закриття -->
+            <button class="close-viewer-btn" onclick="app.closePhotoViewer()">×</button>
+            
+            <!-- Навігаційні кнопки -->
+            <button class="nav-btn prev-btn" onclick="app.showPreviousPhoto()" title="Попередня фотографія">‹</button>
+            <button class="nav-btn next-btn" onclick="app.showNextPhoto()" title="Наступна фотографія">›</button>
+            
+            <!-- Контейнер для фотографії -->
+            <div class="photo-container">
+                <img id="fullscreenPhoto" src="" alt="Фотографія на повний екран">
+            </div>
+            
+            <!-- Інформація про фотографію -->
+            <div class="photo-info-bar">
+                <div class="photo-main-info">
+                    <div class="photo-counter" id="photoCounter"></div>
+                    <div class="photo-timestamp" id="photoTimestamp"></div>
+                </div>
+                <div class="photo-metadata" id="photoMetadata" style="display: none;">
+                    <div class="metadata-item" id="photoLocation"></div>
+                    <div class="metadata-item" id="photoWeather"></div>
+                    <div class="metadata-item" id="photoEvent"></div>
+                </div>
+                <button class="metadata-toggle-btn" id="metadataToggle" onclick="app.toggleMetadata()">
+                    ℹ️ Деталі
+                </button>
+            </div>
+            
+            <!-- Панель дій -->
+            <div class="photo-actions-bar">
+                <button class="action-btn save-btn" onclick="app.saveCurrentPhoto()" title="Зберегти на пристрій">
+                    💾 Зберегти
+                </button>
+                <button class="action-btn share-btn" onclick="app.shareCurrentPhoto()" title="Поділитися">
+                    📤 Поділитися
+                </button>
+                <button class="action-btn delete-btn" onclick="app.deleteCurrentPhoto()" title="Видалити">
+                    🗑️ Видалити
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js?v=10"></script>
+</body>
+</html>
