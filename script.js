@@ -44,7 +44,8 @@ class CameraApp {
             slideshowSpeed: 3,
             gpsEnabled: false,
             weatherEnabled: false,
-            calendarEnabled: false
+            calendarEnabled: false,
+            facingMode: 'user' // 'user' для передньої, 'environment' для задньої
         };
         
         // Змінні для слайд-шоу
@@ -148,10 +149,18 @@ class CameraApp {
         // Оновлюємо попередній перегляд фільтрів
         this.updateFilterPreview(this.settings.currentFilter);
         
+        // Ініціалізуємо кнопку перемикання камери
+        this.updateCameraSwitchButton();
+        
 
         
         // Додаємо обробник для зміни орієнтації
         window.addEventListener('orientationchange', () => {
+            setTimeout(() => this.handleOrientationChange(), 100);
+        });
+        
+        // Додаємо обробник для зміни розміру екрана (також спрацьовує при повороті)
+        window.addEventListener('resize', () => {
             setTimeout(() => this.handleOrientationChange(), 100);
         });
         
@@ -382,7 +391,7 @@ class CameraApp {
                         undefined,
                     width: { ideal: 1280 },
                     height: { ideal: 720 },
-                    facingMode: this.currentCameraIndex === 0 ? 'user' : 'environment'
+                    facingMode: this.settings.facingMode
                 }
             };
             
@@ -396,18 +405,56 @@ class CameraApp {
         }
     }
     
+    // Перемикання між передньою та задньою камерою
     async switchCamera() {
-        if (this.cameras.length <= 1) {
-            this.showError('Доступна тільки одна камера');
-            return;
+        try {
+            // Перемикаємо режим камери
+            this.settings.facingMode = this.settings.facingMode === 'user' ? 'environment' : 'user';
+            
+            // Перезапускаємо камеру з новими налаштуваннями
+            await this.startCamera();
+            
+            // Зберігаємо налаштування
+            this.saveSettings();
+            
+            // Оновлюємо кнопку
+            this.updateCameraSwitchButton();
+            
+            console.log(`Перемкнуто на ${this.settings.facingMode === 'user' ? 'передню' : 'задню'} камеру`);
+        } catch (error) {
+            console.error('Помилка при перемиканні камери:', error);
+            this.showError('Не вдалося перемкнути камеру');
+        }
+    }
+    
+    // Оновлення тексту кнопки перемикання камери
+    updateCameraSwitchButton() {
+        const switchBtn = document.querySelector('.camera-switch-btn');
+        const frontCameraCheckbox = document.getElementById('frontCameraEnabled');
+        const currentCameraInfo = document.getElementById('currentCameraInfo');
+        
+        const isUserCamera = this.settings.facingMode === 'user';
+        
+        if (switchBtn) {
+            switchBtn.innerHTML = `<span class="switch-icon">${isUserCamera ? '🤳' : '📷'}</span>`;
+            switchBtn.title = isUserCamera ? 'Перемкнути на задню камеру' : 'Перемкнути на передню камеру';
         }
         
-        this.currentCameraIndex = (this.currentCameraIndex + 1) % this.cameras.length;
-        await this.startCamera();
+        if (frontCameraCheckbox) {
+            frontCameraCheckbox.checked = isUserCamera;
+        }
         
-        // Показуємо анімацію перемикання
-        this.showSwitchAnimation();
+        if (currentCameraInfo) {
+            currentCameraInfo.textContent = isUserCamera ? 'Передня (селфі)' : 'Задня (основна)';
+        }
     }
+    
+    // Метод для перемикання камери з налаштувань
+    async toggleCameraFacing() {
+        await this.switchCamera();
+    }
+    
+
     
     toggleFlash() {
         // Симуляція спалаху (в реальному додатку тут була б логіка для фізичного спалаху)
@@ -1028,12 +1075,38 @@ class CameraApp {
     }
     
     handleOrientationChange() {
-        // Перезапускаємо камеру при зміні орієнтації
+        // Перезапускаємо камеру при зміні орієнтації з підтримкою автоповороту
         if (this.stream) {
             setTimeout(() => {
-                this.startCamera();
+                this.rotateCamera();
             }, 200);
         }
+    }
+    
+    rotateCamera() {
+        // Визначаємо орієнтацію
+        const orientation = screen.orientation || screen.mozOrientation || screen.msOrientation;
+        let rotation = 0;
+        
+        if (orientation) {
+            switch (orientation.angle || window.orientation) {
+                case 0:   rotation = 0; break;     // Портрет
+                case 90:  rotation = -90; break;   // Ландшафт (поворот вліво)
+                case -90: rotation = 90; break;    // Ландшафт (поворот вправо)
+                case 180: rotation = 180; break;   // Портрет догори ногами
+                default:  rotation = 0;
+            }
+        }
+        
+        // Застосовуємо поворот до відео
+        const video = document.getElementById('video');
+        if (video) {
+            video.style.transform = `rotate(${rotation}deg)`;
+            video.style.transition = 'transform 0.3s ease';
+        }
+        
+        // Перезапускаємо камеру з новими налаштуваннями
+        this.startCamera();
     }
     
     handleResize() {

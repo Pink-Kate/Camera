@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>📸 Фотокамера</title>
-    <link rel="stylesheet" href="style.css?v=8">
+    <link rel="stylesheet" href="style.css?v=10">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#764ba2">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,14 +19,7 @@
                 <div class="clock" id="clock"></div>
             </div>
             
-            <!-- Селектор тем у правому верхньому куті -->
-            <div class="theme-selector">
-                <button class="theme-btn glass-btn" data-theme="default">🌞</button>
-                <button class="theme-btn glass-btn" data-theme="dark">🌙</button>
-                <button class="theme-btn glass-btn" data-theme="ocean">🌊</button>
-                <button class="theme-btn glass-btn" data-theme="forest">🌲</button>
-                <button class="theme-btn glass-btn" data-theme="sunset">🌅</button>
-            </div>
+
             
 
         </header>
@@ -42,8 +35,8 @@
                         <button id="captureBtn" class="mobile-capture-btn btn-style-1">
                             <span class="capture-icon">📷</span>
                         </button>
-                        <button id="switchCameraBtn" class="mobile-switch-btn btn-style-2">
-                            <span class="switch-icon">🔄</span>
+                        <button id="switchCameraBtn" class="mobile-switch-btn camera-switch-btn btn-style-2">
+                            <span class="switch-icon">🤳</span>
                         </button>
                         <button id="flashBtn" class="mobile-flash-btn btn-style-3">
                             <span class="flash-icon">⚡</span>
@@ -119,6 +112,30 @@
                     <button class="style-btn" data-style="3">Стиль 3</button>
                     <button class="style-btn" data-style="4">Стиль 4</button>
                     <button class="style-btn" data-style="5">Стиль 5</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h4>🌈 Теми оформлення</h4>
+                <div class="theme-selector">
+                    <button class="theme-btn" data-theme="default">🌞 Світла</button>
+                    <button class="theme-btn" data-theme="dark">🌙 Темна</button>
+                    <button class="theme-btn" data-theme="ocean">🌊 Океан</button>
+                    <button class="theme-btn" data-theme="forest">🌲 Ліс</button>
+                    <button class="theme-btn" data-theme="sunset">🌅 Захід</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h4>📱 Налаштування камери</h4>
+                <div class="camera-settings">
+                    <label class="setting-item">
+                        <span>🤳 Використовувати передню камеру</span>
+                        <input type="checkbox" id="frontCameraEnabled" onchange="app.toggleCameraFacing()">
+                    </label>
+                    <div class="camera-info">
+                        <small>Поточна камера: <span id="currentCameraInfo">Передня (селфі)</span></small>
+                    </div>
                 </div>
             </div>
             
@@ -283,6 +300,6 @@
         </div>
     </div>
     
-    <script src="script.js?v=8"></script>
+    <script src="script.js?v=10"></script>
 </body>
 </html>
