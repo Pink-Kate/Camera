@@ -545,6 +545,11 @@ class CameraApp {
             this.stream = await navigator.mediaDevices.getUserMedia(constraints);
             this.video.srcObject = this.stream;
             
+            // ВАЖЛИВО: зберігаємо успішний дозвіл
+            this.permissionGranted = true;
+            localStorage.setItem('camera_permission_granted', 'true');
+            this.updatePermissionStatus();
+            
             console.log(`Камера ${this.currentCameraIndex + 1} активована`);
         } catch (error) {
             console.error('Помилка при запуску камери:', error);
@@ -751,8 +756,11 @@ class CameraApp {
         }
         
         // Автоматично зберігаємо на телефон якщо увімкнено (новий параметр)
+        // Автоматичне збереження фото на телефон
         if (this.settings.autoSaveToPhone) {
-            this.savePhotoToPhone(photo);
+            setTimeout(() => {
+                this.savePhotoToPhone(photo);
+            }, 500); // Затримка для кращої обробки
         }
         
         this.displayPhoto(photo);
@@ -990,8 +998,17 @@ class CameraApp {
             
             document.body.appendChild(a);
             
-            // Для iOS Safari використовуємо touch event
-            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+            // Для мобільних пристроїв використовуємо різні методи
+            if (/Android/i.test(navigator.userAgent)) {
+                // Android - прямий клік
+                const clickEvent = new MouseEvent('click', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true
+                });
+                a.dispatchEvent(clickEvent);
+            } else if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                // iOS - touch event
                 const event = new TouchEvent('touchstart', {
                     bubbles: true,
                     cancelable: true
@@ -1265,7 +1282,15 @@ class CameraApp {
                 document.getElementById('weatherEnabled').checked = this.settings.weatherEnabled;
                 document.getElementById('calendarEnabled').checked = this.settings.calendarEnabled;
                 document.getElementById('fullScreenVideo').checked = this.settings.videoFillMode;
-                document.getElementById('autoSaveToPhone').checked = this.settings.autoSaveToPhone;
+                if (document.getElementById('autoSaveToPhone')) {
+                    document.getElementById('autoSaveToPhone').checked = this.settings.autoSaveToPhone;
+                }
+                if (document.getElementById('darkMode')) {
+                    document.getElementById('darkMode').checked = this.settings.darkMode;
+                }
+                if (document.getElementById('showWeather')) {
+                    document.getElementById('showWeather').checked = this.settings.showWeather;
+                }
                 
                 // Завантажуємо фільтр та швидкість слайд-шоу
                 this.changeFilter(this.settings.currentFilter);
