@@ -45,8 +45,10 @@ class CameraApp {
             slideshowEnabled: false,
             slideshowSpeed: 3,
             gpsEnabled: false,
-            weatherEnabled: false,
+            weatherEnabled: true,
             calendarEnabled: false,
+            darkMode: true,
+            showWeather: true,
             facingMode: 'user', // 'user' для передньої, 'environment' для задньої
             videoFillMode: true, // true для повного екрану, false для звичайного режиму
             autoSaveToPhone: true // автоматичне збереження на телефон
@@ -147,6 +149,7 @@ class CameraApp {
         this.loadPhotos();
         this.loadSettings();
         this.loadTheme();
+        this.loadWeatherWidget();
         this.loadButtonStyle();
         
         // Додаємо обробник для відстеження змін дозволів
@@ -1082,9 +1085,12 @@ class CameraApp {
             this.gallerySection.style.display = 'none';
             this.settingsPanel.style.display = 'none';
             
-            // Приховуємо заголовок та меню для повноекранного режиму камери
+            // Приховуємо заголовок, але залишаємо меню для повноекранного режиму камери
             if (mobileHeader) mobileHeader.style.display = 'none';
-            if (mobileMenu) mobileMenu.style.bottom = '0';
+            if (mobileMenu) {
+                mobileMenu.style.display = 'flex';
+                mobileMenu.style.bottom = '0';
+            }
             
         } else if (section === 'gallery') {
             this.cameraSection.style.display = 'none';
@@ -1093,7 +1099,10 @@ class CameraApp {
             
             // Показуємо заголовок та меню
             if (mobileHeader) mobileHeader.style.display = 'block';
-            if (mobileMenu) mobileMenu.style.bottom = '0';
+            if (mobileMenu) {
+                mobileMenu.style.display = 'flex';
+                mobileMenu.style.bottom = '0';
+            }
             
         } else if (section === 'settings') {
             this.cameraSection.style.display = 'none';
@@ -1102,7 +1111,10 @@ class CameraApp {
             
             // Показуємо заголовок та меню
             if (mobileHeader) mobileHeader.style.display = 'block';
-            if (mobileMenu) mobileMenu.style.bottom = '0';
+            if (mobileMenu) {
+                mobileMenu.style.display = 'flex';
+                mobileMenu.style.bottom = '0';
+            }
         }
         
         // Плавна анімація переходу
@@ -2077,6 +2089,81 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Перемикач теми
+CameraApp.prototype.toggleTheme = function() {
+    const isDark = document.getElementById('darkMode').checked;
+    this.settings.darkMode = isDark;
+    this.saveSettings();
+    
+    if (isDark) {
+        document.documentElement.style.setProperty('--primary-bg', '#1a1a1a');
+        document.documentElement.style.setProperty('--secondary-bg', '#2d2d2d');
+        document.documentElement.style.setProperty('--text-color', '#ffffff');
+        document.documentElement.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.2)');
+        document.documentElement.style.setProperty('--menu-bg', 'rgba(26, 26, 26, 0.95)');
+    } else {
+        document.documentElement.style.setProperty('--primary-bg', '#ffffff');
+        document.documentElement.style.setProperty('--secondary-bg', '#f8f9fa');
+        document.documentElement.style.setProperty('--text-color', '#2c3e50');
+        document.documentElement.style.setProperty('--border-color', 'rgba(0, 0, 0, 0.1)');
+        document.documentElement.style.setProperty('--menu-bg', 'rgba(255, 255, 255, 0.95)');
+    }
+};
+
+// Отримання погоди та місця
+CameraApp.prototype.loadWeatherWidget = async function() {
+    if (!this.settings.showWeather) {
+        document.getElementById('weatherWidget').style.display = 'none';
+        return;
+    }
+
+    try {
+        const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                timeout: 10000,
+                enableHighAccuracy: false
+            });
+        });
+
+        const { latitude, longitude } = position.coords;
+        
+        const locationResponse = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=uk`
+        );
+        const locationData = await locationResponse.json();
+        const city = locationData.address?.city || locationData.address?.town || locationData.address?.village || 'Невідоме місце';
+
+        const weatherResponse = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`
+        );
+        const weatherData = await weatherResponse.json();
+        const temp = Math.round(weatherData.current_weather.temperature);
+        
+        const weatherCode = weatherData.current_weather.weathercode;
+        let weatherIcon = '☀️';
+        if (weatherCode >= 61 && weatherCode <= 67) weatherIcon = '🌧️';
+        else if (weatherCode >= 71 && weatherCode <= 77) weatherIcon = '❄️';
+        else if (weatherCode >= 80 && weatherCode <= 82) weatherIcon = '🌦️';
+        else if (weatherCode >= 45 && weatherCode <= 48) weatherIcon = '🌫️';
+        else if (weatherCode >= 51 && weatherCode <= 57) weatherIcon = '🌦️';
+        else if (weatherCode >= 1 && weatherCode <= 3) weatherIcon = '⛅';
+
+        document.getElementById('weatherInfo').innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span>${weatherIcon}</span>
+                <span>${temp}°C</span>
+                <span>📍 ${city}</span>
+            </div>
+        `;
+        document.getElementById('weatherWidget').style.display = 'block';
+
+    } catch (error) {
+        console.log('Не вдалося завантажити погоду:', error);
+        document.getElementById('weatherInfo').innerHTML = '📍 Геолокація недоступна';
+        document.getElementById('weatherWidget').style.display = 'block';
+    }
+};
 
 // Запускаємо додаток
 let app;
