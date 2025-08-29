@@ -30,6 +30,8 @@ class CameraApp {
         this.currentTheme = 'default';
         this.currentButtonStyle = '1';
         this.currentPhotoIndex = 0; // Індекс поточної фотографії у перегляді
+        this.permissionGranted = false; // Статус дозволу до камери
+        this.permissionChecked = false; // Чи був перевірений дозвіл
         this.settings = {
             autoSave: true,
             autoSaveToDevice: false,
@@ -45,7 +47,8 @@ class CameraApp {
             gpsEnabled: false,
             weatherEnabled: false,
             calendarEnabled: false,
-            facingMode: 'user' // 'user' для передньої, 'environment' для задньої
+            facingMode: 'user', // 'user' для передньої, 'environment' для задньої
+            videoFillMode: true // true для повного екрану, false для звичайного режиму
         };
         
         // Змінні для слайд-шоу
@@ -118,6 +121,7 @@ class CameraApp {
         document.getElementById('gpsEnabled').addEventListener('change', (e) => this.updateSetting('gpsEnabled', e.target.checked));
         document.getElementById('weatherEnabled').addEventListener('change', (e) => this.updateSetting('weatherEnabled', e.target.checked));
         document.getElementById('calendarEnabled').addEventListener('change', (e) => this.updateSetting('calendarEnabled', e.target.checked));
+        document.getElementById('fullScreenVideo').addEventListener('change', (e) => this.updateSetting('videoFillMode', e.target.checked));
         
         // Обробники для фільтрів
         document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -142,6 +146,15 @@ class CameraApp {
         this.loadSettings();
         this.loadTheme();
         this.loadButtonStyle();
+        
+        // Додаємо обробник для відстеження змін дозволів
+        this.setupPermissionWatcher();
+        
+        // Оновлюємо статус дозволу в UI
+        this.updatePermissionStatus();
+        
+        // Застосовуємо режим заповнення відео
+        setTimeout(() => this.applyVideoFillMode(), 500);
         
         // Оновлюємо попередній перегляд водяних знаків
         this.updateWatermarkPreview();
@@ -367,7 +380,119 @@ class CameraApp {
             previewOwner.style.display = 'none'; // Приховуємо окремий блок власниці, оскільки все разом
         }
     }
+
+    setupPermissionWatcher() {
+        // Відстежуємо зміни дозволів через Permissions API
+        if ('permissions' in navigator) {
+            navigator.permissions.query({ name: 'camera' })
+                .then(permission => {
+                    // Відстежуємо зміни дозволу
+                    permission.addEventListener('change', () => {
+                        console.log('Статус дозволу камери змінився:', permission.state);
+                        
+                        if (permission.state === 'granted') {
+                            this.permissionGranted = true;
+                            localStorage.setItem('camera_permission_granted', 'true');
+                            this.updatePermissionStatus();
+                        } else if (permission.state === 'denied') {
+                            this.permissionGranted = false;
+                            localStorage.setItem('camera_permission_granted', 'false');
+                            
+                            // Зупиняємо камеру якщо дозвіл відкликано
+                            if (this.stream) {
+                                this.stream.getTracks().forEach(track => track.stop());
+                                this.stream = null;
+                                this.video.srcObject = null;
+                            }
+                            
+                            this.updatePermissionStatus();
+                            this.showError('Доступ до камери було відкликано');
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.log('Permissions API не підтримується:', error);
+                });
+        }
+
+        // Додатково відстежуємо через MediaDevices API
+        if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+            navigator.mediaDevices.addEventListener('devicechange', () => {
+                console.log('Пристрої медіа змінилися');
+                this.getCameras(); // Оновлюємо список камер
+            });
+        }
+    }
     
+    async checkCameraPermission() {
+        try {
+            // Перевіряємо збережений статус дозволу
+            const savedPermission = localStorage.getItem('camera_permission_granted');
+            if (savedPermission === 'true') {
+                this.permissionGranted = true;
+                this.permissionChecked = true;
+                return true;
+            }
+
+            // Використовуємо Permissions API якщо доступний
+            if ('permissions' in navigator) {
+                const permission = await navigator.permissions.query({ name: 'camera' });
+                
+                if (permission.state === 'granted') {
+                    this.permissionGranted = true;
+                    this.permissionChecked = true;
+                    localStorage.setItem('camera_permission_granted', 'true');
+                    return true;
+                } else if (permission.state === 'denied') {
+                    this.permissionGranted = false;
+                    this.permissionChecked = true;
+                    localStorage.setItem('camera_permission_granted', 'false');
+                    this.showError('Доступ до камери заборонено. Будь ласка, дозвольте доступ у налаштуваннях браузера.');
+                    return false;
+                }
+            }
+
+            this.permissionChecked = true;
+            return false; // Потрібен запит дозволу
+        } catch (error) {
+            console.error('Помилка при перевірці дозволу до камери:', error);
+            this.permissionChecked = true;
+            return false;
+        }
+    }
+
+    async requestCameraPermission() {
+        try {
+            // Робимо пробний запит до камери для отримання дозволу
+            const testStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: this.settings.facingMode } 
+            });
+            
+            // Якщо дозвіл отримано, зупиняємо тестовий stream
+            testStream.getTracks().forEach(track => track.stop());
+            
+            this.permissionGranted = true;
+            localStorage.setItem('camera_permission_granted', 'true');
+            this.updatePermissionStatus();
+            this.showSuccess('Дозвіл до камери надано!');
+            return true;
+        } catch (error) {
+            console.error('Помилка при запиті дозволу до камери:', error);
+            this.permissionGranted = false;
+            localStorage.setItem('camera_permission_granted', 'false');
+            this.updatePermissionStatus();
+            
+            if (error.name === 'NotAllowedError') {
+                this.showError('Доступ до камери заборонено. Будь ласка, дозвольте доступ у налаштуваннях браузера.');
+            } else if (error.name === 'NotFoundError') {
+                this.showError('Камеру не знайдено. Перевірте підключення камери.');
+            } else {
+                this.showError('Не вдалося отримати доступ до камери.');
+            }
+            return false;
+        }
+    }
+
     async getCameras() {
         try {
             const devices = await navigator.mediaDevices.enumerateDevices();
@@ -380,6 +505,22 @@ class CameraApp {
     
     async startCamera() {
         try {
+            // Перевіряємо дозвіл до камери спочатку
+            if (!this.permissionChecked) {
+                const hasPermission = await this.checkCameraPermission();
+                if (!hasPermission && !this.permissionGranted) {
+                    // Запитуємо дозвіл тільки якщо він ще не надавався
+                    const permissionGranted = await this.requestCameraPermission();
+                    if (!permissionGranted) {
+                        return; // Виходимо якщо дозвіл не надано
+                    }
+                }
+            } else if (!this.permissionGranted) {
+                this.showError('Дозвіл до камери не надано. Будь ласка, дозвольте доступ у налаштуваннях браузера.');
+                return;
+            }
+
+            // Зупиняємо попередній stream якщо він існує
             if (this.stream) {
                 this.stream.getTracks().forEach(track => track.stop());
             }
@@ -395,24 +536,57 @@ class CameraApp {
                 }
             };
             
+            // Використовуємо існуючий дозвіл
             this.stream = await navigator.mediaDevices.getUserMedia(constraints);
             this.video.srcObject = this.stream;
             
             console.log(`Камера ${this.currentCameraIndex + 1} активована`);
         } catch (error) {
             console.error('Помилка при запуску камери:', error);
-            this.showError('Не вдалося запустити камеру. Перевірте дозволи.');
+            
+            // Обробляємо різні типи помилок
+            if (error.name === 'NotAllowedError') {
+                this.permissionGranted = false;
+                localStorage.setItem('camera_permission_granted', 'false');
+                this.showError('Доступ до камери заборонено. Будь ласка, дозвольте доступ у налаштуваннях браузера.');
+            } else if (error.name === 'NotFoundError') {
+                this.showError('Камеру не знайдено. Перевірте підключення камери.');
+            } else if (error.name === 'NotReadableError') {
+                this.showError('Камера використовується іншим додатком.');
+            } else {
+                this.showError('Не вдалося запустити камеру. Перевірте дозволи та підключення.');
+            }
         }
     }
     
     // Перемикання між передньою та задньою камерою
     async switchCamera() {
         try {
+            // Перевіряємо чи є дозвіл
+            if (!this.permissionGranted) {
+                this.showError('Дозвіл до камери не надано');
+                return;
+            }
+
             // Перемикаємо режим камери
             this.settings.facingMode = this.settings.facingMode === 'user' ? 'environment' : 'user';
             
-            // Перезапускаємо камеру з новими налаштуваннями
-            await this.startCamera();
+            // Зупиняємо поточний stream
+            if (this.stream) {
+                this.stream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Запускаємо камеру з новими налаштуваннями (без повторного запиту дозволу)
+            const constraints = {
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: this.settings.facingMode
+                }
+            };
+            
+            this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+            this.video.srcObject = this.stream;
             
             // Зберігаємо налаштування
             this.saveSettings();
@@ -452,6 +626,44 @@ class CameraApp {
     // Метод для перемикання камери з налаштувань
     async toggleCameraFacing() {
         await this.switchCamera();
+    }
+
+    // Метод для перемикання режиму заповнення відео
+    toggleVideoFill() {
+        this.settings.videoFillMode = !this.settings.videoFillMode;
+        this.applyVideoFillMode();
+        this.saveSettings();
+        
+        const mode = this.settings.videoFillMode ? 'розтягнуто' : 'вписано';
+        this.showSuccess(`Режим відео: ${mode}`);
+    }
+
+    // Застосування режиму заповнення відео
+    applyVideoFillMode() {
+        const video = document.getElementById('video');
+        const videoContainer = document.querySelector('.video-container');
+        
+        if (video && videoContainer) {
+            if (this.settings.videoFillMode) {
+                // Повноекранний режим - відео на весь екран без фону
+                video.style.objectFit = 'cover';
+                video.style.width = '100vw';
+                video.style.borderRadius = '0';
+                video.style.border = 'none';
+                video.style.boxShadow = 'none';
+                videoContainer.style.width = '100vw';
+                videoContainer.style.marginLeft = 'calc(-50vw + 50%)';
+            } else {
+                // Звичайний режим з рамкою
+                video.style.objectFit = 'cover';
+                video.style.width = '100%';
+                video.style.borderRadius = '25px';
+                video.style.border = '3px solid var(--glass-border)';
+                video.style.boxShadow = 'var(--glass-shadow)';
+                videoContainer.style.width = '100%';
+                videoContainer.style.marginLeft = '0';
+            }
+        }
     }
     
 
@@ -899,12 +1111,24 @@ class CameraApp {
             this.updateLocationPreview();
         } else if (key === 'calendarEnabled') {
             this.showSuccess(`Інтеграція з календарем: ${value ? 'увімкнено' : 'вимкнено'}`);
+        } else if (key === 'videoFillMode') {
+            this.applyVideoFillMode();
+            const mode = value ? 'розтягнуто' : 'вписано';
+            this.showSuccess(`Режим відео: ${mode}`);
         }
         
         // Оновлюємо попередній перегляд
         this.updateWatermarkPreview();
     }
     
+    saveSettings() {
+        try {
+            localStorage.setItem('camera_settings', JSON.stringify(this.settings));
+        } catch (error) {
+            console.error('Помилка при збереженні налаштувань:', error);
+        }
+    }
+
     loadSettings() {
         try {
             const savedSettings = localStorage.getItem('camera_settings');
@@ -924,6 +1148,7 @@ class CameraApp {
                 document.getElementById('gpsEnabled').checked = this.settings.gpsEnabled;
                 document.getElementById('weatherEnabled').checked = this.settings.weatherEnabled;
                 document.getElementById('calendarEnabled').checked = this.settings.calendarEnabled;
+                document.getElementById('fullScreenVideo').checked = this.settings.videoFillMode;
                 
                 // Завантажуємо фільтр та швидкість слайд-шоу
                 this.changeFilter(this.settings.currentFilter);
@@ -1632,6 +1857,45 @@ class CameraApp {
             toggleBtn.textContent = 'ℹ️ Деталі';
         }
     }
+
+    updatePermissionStatus() {
+        const permissionIndicator = document.getElementById('permissionIndicator');
+        const permissionText = document.getElementById('permissionText');
+        const requestPermissionBtn = document.getElementById('requestPermissionBtn');
+        
+        if (!permissionIndicator || !permissionText || !requestPermissionBtn) {
+            return;
+        }
+
+        if (this.permissionGranted) {
+            permissionIndicator.textContent = '🟢';
+            permissionText.textContent = 'Доступ до камери дозволено';
+            requestPermissionBtn.style.display = 'none';
+        } else if (this.permissionChecked) {
+            permissionIndicator.textContent = '🔴';
+            permissionText.textContent = 'Доступ до камери заборонено';
+            requestPermissionBtn.style.display = 'block';
+        } else {
+            permissionIndicator.textContent = '🟡';
+            permissionText.textContent = 'Перевірка дозволу...';
+            requestPermissionBtn.style.display = 'none';
+        }
+    }
+
+    async requestCameraPermissionManual() {
+        try {
+            const permissionGranted = await this.requestCameraPermission();
+            if (permissionGranted) {
+                this.updatePermissionStatus();
+                // Спробуємо запустити камеру
+                await this.startCamera();
+                this.showSuccess('Доступ до камери надано! Камера запущена.');
+            }
+        } catch (error) {
+            console.error('Помилка при ручному запиті дозволу:', error);
+            this.updatePermissionStatus();
+        }
+    }
     
 
 }
@@ -1681,6 +1945,30 @@ style.textContent = `
     .mobile-flash-btn,
     .btn {
         transition: all 0.3s ease;
+    }
+    
+    /* Стилі для статусу дозволу */
+    .permission-section {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .permission-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    
+    .permission-indicator {
+        font-size: 16px;
+    }
+    
+    #requestPermissionBtn {
+        width: 100%;
+        margin-top: 5px;
     }
 `;
 document.head.appendChild(style);

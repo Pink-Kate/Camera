@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>📸 Фотокамера</title>
-    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="stylesheet" href="style.css?v=12">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#764ba2">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -26,12 +26,12 @@
         
         <main class="mobile-main">
             <div class="camera-section">
-                <div class="video-container">
-                    <video id="video" autoplay muted playsinline></video>
+                <div class="video-container" style="position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; z-index: 1;">
+                    <video id="video" autoplay muted playsinline style="width: 100vw; height: 100vh; object-fit: cover; border-radius: 0; border: none; box-shadow: none;"></video>
                     <canvas id="canvas" style="display: none;"></canvas>
                     
                     <!-- Мобільні кнопки камери з різними стилями -->
-                    <div class="mobile-camera-controls">
+                    <div class="mobile-camera-controls" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;">
                         <button id="captureBtn" class="mobile-capture-btn btn-style-1">
                             <span class="capture-icon">📷</span>
                         </button>
@@ -133,8 +133,21 @@
                         <span>🤳 Використовувати передню камеру</span>
                         <input type="checkbox" id="frontCameraEnabled" onchange="app.toggleCameraFacing()">
                     </label>
+                    <label class="setting-item">
+                        <span>🖼️ Розтягнути відео на весь екран</span>
+                        <input type="checkbox" id="fullScreenVideo" onchange="app.toggleVideoFill()">
+                    </label>
                     <div class="camera-info">
                         <small>Поточна камера: <span id="currentCameraInfo">Передня (селфі)</span></small>
+                    </div>
+                    <div class="permission-section">
+                        <button id="requestPermissionBtn" class="btn btn-primary btn-style-1" onclick="app.requestCameraPermissionManual()" style="display: none;">
+                            🎥 Дозволити доступ до камери
+                        </button>
+                        <div class="permission-status" id="permissionStatus">
+                            <span class="permission-indicator" id="permissionIndicator">🔴</span>
+                            <span id="permissionText">Перевірка дозволу...</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -300,6 +313,6 @@
         </div>
     </div>
     
-    <script src="script.js?v=10"></script>
+    <script src="script.js?v=11"></script>
 </body>
 </html>
