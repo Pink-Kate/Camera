@@ -48,7 +48,8 @@ class CameraApp {
             weatherEnabled: false,
             calendarEnabled: false,
             facingMode: 'user', // 'user' для передньої, 'environment' для задньої
-            videoFillMode: true // true для повного екрану, false для звичайного режиму
+            videoFillMode: true, // true для повного екрану, false для звичайного режиму
+            autoSaveToPhone: true // автоматичне збереження на телефон
         };
         
         // Змінні для слайд-шоу
@@ -122,6 +123,7 @@ class CameraApp {
         document.getElementById('weatherEnabled').addEventListener('change', (e) => this.updateSetting('weatherEnabled', e.target.checked));
         document.getElementById('calendarEnabled').addEventListener('change', (e) => this.updateSetting('calendarEnabled', e.target.checked));
         document.getElementById('fullScreenVideo').addEventListener('change', (e) => this.updateSetting('videoFillMode', e.target.checked));
+        document.getElementById('autoSaveToPhone').addEventListener('change', (e) => this.updateSetting('autoSaveToPhone', e.target.checked));
         
         // Обробники для фільтрів
         document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -740,9 +742,14 @@ class CameraApp {
             this.savePhotos();
         }
         
-        // Автоматично зберігаємо на пристрій якщо увімкнено
+        // Автоматично зберігаємо на пристрій якщо увімкнено (старий параметр)
         if (this.settings.autoSaveToDevice) {
             this.savePhotoToDevice(photo);
+        }
+        
+        // Автоматично зберігаємо на телефон якщо увімкнено (новий параметр)
+        if (this.settings.autoSaveToPhone) {
+            this.savePhotoToPhone(photo);
         }
         
         this.displayPhoto(photo);
@@ -957,6 +964,84 @@ class CameraApp {
             return false;
         }
     }
+
+    async savePhotoToPhone(photo) {
+        try {
+            // Конвертуємо base64 в Blob
+            const response = await fetch(photo.data);
+            const blob = await response.blob();
+            
+            // Створюємо файл з іменем
+            const file = new File([blob], photo.filename, { type: 'image/jpeg' });
+            
+            // Для мобільних пристроїв використовуємо автоматичне завантаження
+            const url = URL.createObjectURL(file);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = photo.filename;
+            a.style.display = 'none';
+            
+            // Додаємо атрибути для мобільних браузерів
+            a.setAttribute('target', '_blank');
+            a.setAttribute('rel', 'noopener');
+            
+            document.body.appendChild(a);
+            
+            // Для iOS Safari використовуємо touch event
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                const event = new TouchEvent('touchstart', {
+                    bubbles: true,
+                    cancelable: true
+                });
+                a.dispatchEvent(event);
+            }
+            
+            a.click();
+            
+            // Очищаємо після невеликої затримки
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+            
+            if (this.settings.showNotifications) {
+                this.showSuccess(`📱 Фото автоматично збережено на телефон!`);
+            }
+            return true;
+            
+        } catch (error) {
+            console.error('Помилка при збереженні на телефон:', error);
+            
+            // Fallback: спробуємо використати Web Share API
+            if (navigator.share && navigator.canShare) {
+                try {
+                    const response = await fetch(photo.data);
+                    const blob = await response.blob();
+                    const file = new File([blob], photo.filename, { type: 'image/jpeg' });
+                    
+                    if (navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            title: 'Фотографія з камери',
+                            text: 'Зроблено програмою Катерини Миколаївни',
+                            files: [file]
+                        });
+                        
+                        if (this.settings.showNotifications) {
+                            this.showSuccess(`📱 Фото поділено через систему!`);
+                        }
+                        return true;
+                    }
+                } catch (shareError) {
+                    console.log('Web Share API не спрацював:', shareError);
+                }
+            }
+            
+            if (this.settings.showNotifications) {
+                this.showError('Не вдалося автоматично зберегти на телефон. Спробуйте зберегти вручну.');
+            }
+            return false;
+        }
+    }
     
     async saveAllToDevice() {
         if (this.photos.length === 0) {
@@ -988,19 +1073,36 @@ class CameraApp {
             item.classList.toggle('active', item.dataset.section === section);
         });
         
+        const mobileHeader = document.querySelector('.mobile-header');
+        const mobileMenu = document.querySelector('.mobile-menu');
+        
         // Показуємо/приховуємо секції
         if (section === 'camera') {
             this.cameraSection.style.display = 'block';
             this.gallerySection.style.display = 'none';
             this.settingsPanel.style.display = 'none';
+            
+            // Приховуємо заголовок та меню для повноекранного режиму камери
+            if (mobileHeader) mobileHeader.style.display = 'none';
+            if (mobileMenu) mobileMenu.style.bottom = '0';
+            
         } else if (section === 'gallery') {
             this.cameraSection.style.display = 'none';
             this.gallerySection.style.display = 'block';
             this.settingsPanel.style.display = 'none';
+            
+            // Показуємо заголовок та меню
+            if (mobileHeader) mobileHeader.style.display = 'block';
+            if (mobileMenu) mobileMenu.style.bottom = '0';
+            
         } else if (section === 'settings') {
             this.cameraSection.style.display = 'none';
             this.gallerySection.style.display = 'none';
             this.settingsPanel.style.display = 'flex';
+            
+            // Показуємо заголовок та меню
+            if (mobileHeader) mobileHeader.style.display = 'block';
+            if (mobileMenu) mobileMenu.style.bottom = '0';
         }
         
         // Плавна анімація переходу
@@ -1115,6 +1217,8 @@ class CameraApp {
             this.applyVideoFillMode();
             const mode = value ? 'розтягнуто' : 'вписано';
             this.showSuccess(`Режим відео: ${mode}`);
+        } else if (key === 'autoSaveToPhone') {
+            this.showSuccess(`📱 Автозбереження на телефон: ${value ? 'увімкнено' : 'вимкнено'}`);
         }
         
         // Оновлюємо попередній перегляд
@@ -1149,6 +1253,7 @@ class CameraApp {
                 document.getElementById('weatherEnabled').checked = this.settings.weatherEnabled;
                 document.getElementById('calendarEnabled').checked = this.settings.calendarEnabled;
                 document.getElementById('fullScreenVideo').checked = this.settings.videoFillMode;
+                document.getElementById('autoSaveToPhone').checked = this.settings.autoSaveToPhone;
                 
                 // Завантажуємо фільтр та швидкість слайд-шоу
                 this.changeFilter(this.settings.currentFilter);

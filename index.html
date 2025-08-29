@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>📸 Фотокамера</title>
-    <link rel="stylesheet" href="style.css?v=12">
+    <link rel="stylesheet" href="style.css?v=14">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#764ba2">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,7 +13,7 @@
 </head>
 <body>
     <div class="container">
-        <header class="mobile-header">
+        <header class="mobile-header" style="display: none;">
             <div class="header-content">
                 <h1>📸 Фотокамера</h1>
                 <div class="clock" id="clock"></div>
@@ -31,7 +31,7 @@
                     <canvas id="canvas" style="display: none;"></canvas>
                     
                     <!-- Мобільні кнопки камери з різними стилями -->
-                    <div class="mobile-camera-controls" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;">
+                    <div class="mobile-camera-controls" style="position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 1001;">
                         <button id="captureBtn" class="mobile-capture-btn btn-style-1">
                             <span class="capture-icon">📷</span>
                         </button>
@@ -136,6 +136,10 @@
                     <label class="setting-item">
                         <span>🖼️ Розтягнути відео на весь екран</span>
                         <input type="checkbox" id="fullScreenVideo" onchange="app.toggleVideoFill()">
+                    </label>
+                    <label class="setting-item">
+                        <span>📱 Автозбереження на телефон</span>
+                        <input type="checkbox" id="autoSaveToPhone" onchange="app.updateSetting('autoSaveToPhone', this.checked)" checked>
                     </label>
                     <div class="camera-info">
                         <small>Поточна камера: <span id="currentCameraInfo">Передня (селфі)</span></small>
@@ -313,6 +317,6 @@
         </div>
     </div>
     
-    <script src="script.js?v=11"></script>
+    <script src="script.js?v=14"></script>
 </body>
 </html>

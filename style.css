@@ -309,13 +309,13 @@ h1 {
 /* Мобільні кнопки камери */
 .mobile-camera-controls {
     position: fixed;
-    bottom: 20px;
+    bottom: 100px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     gap: 20px;
     align-items: center;
-    z-index: 1000;
+    z-index: 1001;
 }
 
 /* Покращені FAB кнопки */
@@ -635,7 +635,7 @@ h1 {
     display: flex;
     justify-content: space-around;
     padding: 15px 0;
-    z-index: 1000;
+    z-index: 999;
 }
 
 .menu-item {
@@ -919,7 +919,7 @@ h1 {
     }
     
     .mobile-camera-controls {
-        bottom: 15px;
+        bottom: 100px;
         gap: 15px;
     }
     
