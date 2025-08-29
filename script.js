@@ -69,6 +69,9 @@ class CameraApp {
     }
     
     async init() {
+        console.log('Ініціалізація камери...', window.innerWidth, 'x', window.innerHeight);
+        console.log('User Agent:', navigator.userAgent);
+        console.log('Mobile detection:', /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent));
         this.updateClock();
         setInterval(() => this.updateClock(), 1000);
         
@@ -441,6 +444,7 @@ class CameraApp {
                     this.permissionGranted = true;
                     this.permissionChecked = true;
                     console.log('Використовуємо збережений мобільний дозвіл');
+                    this.updatePermissionStatus();
                     return true;
                 }
             } else if (savedPermission === 'true') {
@@ -2214,6 +2218,15 @@ CameraApp.prototype.loadWeatherWidget = async function() {
         document.getElementById('weatherWidget').style.display = 'block';
     }
 };
+
+// Очищення кешу для мобільних пристроїв
+if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) {
+    // Примусове перезавантаження без кешу
+    if (!sessionStorage.getItem('mobile_reload_done')) {
+        sessionStorage.setItem('mobile_reload_done', 'true');
+        location.reload(true);
+    }
+}
 
 // Запускаємо додаток
 let app;
