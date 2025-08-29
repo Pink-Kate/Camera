@@ -433,7 +433,18 @@ class CameraApp {
         try {
             // Перевіряємо збережений статус дозволу
             const savedPermission = localStorage.getItem('camera_permission_granted');
-            if (savedPermission === 'true') {
+            
+            // Для мобільних перевіряємо термін дії
+            if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) {
+                const mobileExpires = localStorage.getItem('mobile_permission_expires');
+                if (mobileExpires && Date.now() < parseInt(mobileExpires) && savedPermission === 'true') {
+                    this.permissionGranted = true;
+                    this.permissionChecked = true;
+                    console.log('Використовуємо збережений мобільний дозвіл');
+                    return true;
+                }
+            } else if (savedPermission === 'true') {
+                // Для десктопу
                 this.permissionGranted = true;
                 this.permissionChecked = true;
                 return true;
@@ -478,6 +489,10 @@ class CameraApp {
             
             this.permissionGranted = true;
             localStorage.setItem('camera_permission_granted', 'true');
+            // Для мобільних встановлюємо довгий термін дії дозволу
+            if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) {
+                localStorage.setItem('mobile_permission_expires', Date.now() + (24 * 60 * 60 * 1000)); // 24 години
+            }
             this.updatePermissionStatus();
             this.showSuccess('Дозвіл до камери надано!');
             return true;
@@ -545,9 +560,19 @@ class CameraApp {
             this.stream = await navigator.mediaDevices.getUserMedia(constraints);
             this.video.srcObject = this.stream;
             
-            // ВАЖЛИВО: зберігаємо успішний дозвіл
+            // ВАЖЛИВО: зберігаємо успішний дозвіл з датою
             this.permissionGranted = true;
+            const permissionData = {
+                granted: true,
+                timestamp: Date.now(),
+                userAgent: navigator.userAgent
+            };
             localStorage.setItem('camera_permission_granted', 'true');
+                            localStorage.setItem('camera_permission_data', JSON.stringify(permissionData));
+            // Для мобільних встановлюємо довгий термін дії дозволу
+            if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) {
+                localStorage.setItem('mobile_permission_expires', Date.now() + (24 * 60 * 60 * 1000)); // 24 години
+            }
             this.updatePermissionStatus();
             
             console.log(`Камера ${this.currentCameraIndex + 1} активована`);

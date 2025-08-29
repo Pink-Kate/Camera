@@ -1024,6 +1024,58 @@ h1 {
 
 /* Покращення для мобільних пристроїв */
 @media (max-width: 480px) {
+    /* Забезпечуємо повноекранний режим */
+    body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        height: 100vh;
+        width: 100vw;
+    }
+    
+    .container {
+        height: 100vh;
+        width: 100vw;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .camera-section {
+        height: 100vh !important;
+        width: 100vw !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 1 !important;
+    }
+    
+    .video-container {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 1 !important;
+    }
+    
+    #video {
+        width: 100vw !important;
+        height: 100vh !important;
+        object-fit: cover !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+    }
+    
+    .mobile-camera-controls {
+        position: fixed !important;
+        bottom: 120px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        z-index: 1001 !important;
+    }
+    
     .mobile-header {
         padding: 10px 15px;
         flex-direction: column;
