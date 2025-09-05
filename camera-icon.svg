@@ -1,0 +1,41 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .camera-bg {
+        background: linear-gradient(135deg, #4A90A4 0%, #8B4513 25%, #FF8C42 50%, #6B8CAE 75%, #2C5530 100%);
+        border-radius: 64px;
+      }
+    </style>
+  </defs>
+  
+  <!-- Фон з кольорами твоєї фотографії -->
+  <rect width="512" height="512" rx="64" class="camera-bg"/>
+  
+  <!-- Стилізована камера -->
+  <g transform="translate(128, 128)">
+    <!-- Корпус камери -->
+    <rect x="32" y="64" width="192" height="128" rx="24" fill="#34495e" stroke="#2c3e50" stroke-width="3"/>
+    
+    <!-- Об'єктив -->
+    <circle cx="128" cy="128" r="48" fill="#2c3e50" stroke="#34495e" stroke-width="4"/>
+    <circle cx="128" cy="128" r="32" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+    <circle cx="128" cy="128" r="16" fill="#2c3e50"/>
+    
+    <!-- Спалах -->
+    <rect x="64" y="32" width="16" height="16" rx="8" fill="#f39c12"/>
+    
+    <!-- Видошукач -->
+    <rect x="96" y="32" width="64" height="24" rx="8" fill="#34495e" stroke="#2c3e50" stroke-width="2"/>
+    
+    <!-- Декоративні елементи -->
+    <circle cx="192" cy="80" r="8" fill="#f39c12"/>
+    <rect x="48" y="144" width="12" height="8" rx="4" fill="#e74c3c"/>
+  </g>
+  
+  <!-- Геометричні елементи в стилі твоєї фотографії -->
+  <g opacity="0.3">
+    <polygon points="64,448 128,384 192,448" fill="#FF8C42"/>
+    <polygon points="320,64 384,128 320,192" fill="#4A90A4"/>
+    <circle cx="448" cy="448" r="32" fill="#8B4513"/>
+  </g>
+</svg>

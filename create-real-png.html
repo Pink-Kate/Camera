@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PNG Creator 180x180</title>
+</head>
+<body>
+    <h2>📱 Створити PNG файл для iOS</h2>
+    <canvas id="canvas" width="180" height="180" style="border: 2px solid #333; border-radius: 10px;"></canvas>
+    <br><br>
+    <button onclick="createIcon()" style="padding: 10px 20px; font-size: 16px;">🎨 Створити іконку</button>
+    <button onclick="downloadPNG()" style="padding: 10px 20px; font-size: 16px;">💾 Завантажити PNG</button>
+    
+    <script>
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+        
+        function createIcon() {
+            // Градієнт фон
+            let gradient = ctx.createLinearGradient(0, 0, 180, 180);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 180, 180);
+            
+            // Тіло камери
+            ctx.fillStyle = '#2c2c2c';
+            ctx.fillRect(25, 65, 130, 75);
+            ctx.fillRect(55, 45, 70, 25);
+            
+            // Об'єктив (зовнішній)
+            ctx.beginPath();
+            ctx.arc(90, 100, 35, 0, 2 * Math.PI);
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fill();
+            
+            // Об'єктив (середній)
+            ctx.beginPath();
+            ctx.arc(90, 100, 25, 0, 2 * Math.PI);
+            ctx.fillStyle = '#0f0f0f';
+            ctx.fill();
+            
+            // Об'єктив (внутрішній)
+            ctx.beginPath();
+            ctx.arc(90, 100, 15, 0, 2 * Math.PI);
+            ctx.fillStyle = '#050505';
+            ctx.fill();
+            
+            // Блиск на об'єктиві
+            ctx.beginPath();
+            ctx.arc(85, 95, 8, 0, 2 * Math.PI);
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.fill();
+            
+            // Спалах
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(130, 70, 18, 12);
+            ctx.fillRect(134, 66, 10, 20);
+            
+            // Кнопка спуску
+            ctx.beginPath();
+            ctx.arc(35, 55, 6, 0, 2 * Math.PI);
+            ctx.fillStyle = '#555';
+            ctx.fill();
+            
+            // Логотип/назва
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('📸', 90, 155);
+            
+            console.log('✅ Іконка створена!');
+        }
+        
+        function downloadPNG() {
+            // Створюємо посилання для завантаження
+            let link = document.createElement('a');
+            link.download = 'camera-icon-180.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            
+            console.log('💾 PNG файл завантажено як camera-icon-180.png');
+            alert('📱 PNG файл завантажено!\n\nТепер:\n1. Помісти файл в папку проекту\n2. Зміни index.html щоб використовувати файл\n3. Перезапусти сервер');
+        }
+        
+        // Автоматично створюємо іконку
+        window.onload = () => {
+            createIcon();
+        };
+    </script>
+</body>
+</html>

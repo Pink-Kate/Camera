@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PNG Icon Generator</title>
+</head>
+<body>
+    <h2>Генератор PNG іконки 180x180</h2>
+    <canvas id="canvas" width="180" height="180" style="border: 1px solid #ccc;"></canvas>
+    <br><br>
+    <button onclick="createIcon()">Створити</button>
+    <button onclick="copyBase64()">Копіювати Base64</button>
+    <br><br>
+    <textarea id="base64Output" rows="10" cols="50" placeholder="Base64 код з'явиться тут"></textarea>
+    
+    <script>
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+        
+        function createIcon() {
+            // Очищаємо canvas
+            ctx.clearRect(0, 0, 180, 180);
+            
+            // Градієнт фон
+            let gradient = ctx.createLinearGradient(0, 0, 180, 180);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 180, 180);
+            
+            // Тіло камери (прямокутник)
+            ctx.fillStyle = '#333';
+            ctx.fillRect(30, 70, 120, 70);
+            
+            // Верхня частина камери
+            ctx.fillStyle = '#444';
+            ctx.fillRect(60, 50, 60, 25);
+            
+            // Об'єктив (зовнішній)
+            ctx.beginPath();
+            ctx.arc(90, 105, 30, 0, 2 * Math.PI);
+            ctx.fillStyle = '#222';
+            ctx.fill();
+            
+            // Об'єктив (внутрішній)
+            ctx.beginPath();
+            ctx.arc(90, 105, 20, 0, 2 * Math.PI);
+            ctx.fillStyle = '#111';
+            ctx.fill();
+            
+            // Спалах
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(125, 75, 15, 10);
+            
+            // Кнопка спуску
+            ctx.beginPath();
+            ctx.arc(40, 60, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = '#666';
+            ctx.fill();
+            
+            console.log('Іконка створена!');
+            
+            // Генеруємо base64
+            let base64 = canvas.toDataURL('image/png').split(',')[1];
+            document.getElementById('base64Output').value = base64;
+        }
+        
+        function copyBase64() {
+            let textarea = document.getElementById('base64Output');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Base64 код скопійовано!');
+        }
+        
+        // Автоматично створюємо іконку
+        createIcon();
+    </script>
+</body>
+</html>

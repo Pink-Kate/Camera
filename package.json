@@ -1,20 +1,24 @@
 {
   "name": "fotokamera",
-  "version": "1.0.0",
+  "version": "1.0.0", 
   "description": "Професійна фотокамера з фільтрами та водяними знаками",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "build": "echo 'No build needed'",
+    "postinstall": "echo 'Installation complete'"
   },
   "dependencies": {
     "express": "^4.18.2",
     "compression": "^1.7.4"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "keywords": ["camera", "photo", "web-app", "pwa"],
   "author": "Катерина Миколаївна",
-  "license": "MIT"
+  "license": "MIT",
+  "type": "commonjs"
 }

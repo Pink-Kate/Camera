@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Simple PNG Icon</title>
+</head>
+<body>
+    <h2>Створення простої PNG іконки 180x180</h2>
+    <canvas id="canvas" width="180" height="180" style="border: 1px solid #ccc;"></canvas>
+    <br><br>
+    <button onclick="createIcon()">Створити іконку</button>
+    <button onclick="downloadIcon()">Скачати PNG</button>
+    
+    <script>
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+        
+        function createIcon() {
+            // Очищаємо canvas
+            ctx.clearRect(0, 0, 180, 180);
+            
+            // Створюємо градієнт фон
+            let gradient = ctx.createLinearGradient(0, 0, 180, 180);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            
+            // Заповнюємо весь canvas градієнтом
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 180, 180);
+            
+            // Малюємо просту камеру
+            ctx.fillStyle = '#333';
+            
+            // Тіло камери
+            ctx.fillRect(30, 60, 120, 80);
+            
+            // Об'єктив
+            ctx.beginPath();
+            ctx.arc(90, 100, 25, 0, 2 * Math.PI);
+            ctx.fillStyle = '#222';
+            ctx.fill();
+            
+            // Внутрішня частина об'єктива
+            ctx.beginPath();
+            ctx.arc(90, 100, 15, 0, 2 * Math.PI);
+            ctx.fillStyle = '#111';
+            ctx.fill();
+            
+            // Спалах
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(130, 70, 15, 10);
+            
+            console.log('Іконка створена!');
+        }
+        
+        function downloadIcon() {
+            canvas.toBlob(function(blob) {
+                let link = document.createElement('a');
+                link.download = 'apple-touch-icon-180x180.png';
+                link.href = URL.createObjectURL(blob);
+                link.click();
+            });
+        }
+        
+        // Автоматично створюємо іконку
+        createIcon();
+    </script>
+</body>
+</html>

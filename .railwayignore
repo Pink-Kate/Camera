@@ -1,0 +1,8 @@
+# Railway ignore
+node_modules/
+.git/
+.vscode/
+.idea/
+*.log
+.env*
+README.md

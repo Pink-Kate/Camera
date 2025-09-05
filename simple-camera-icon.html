@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head><title>Simple Camera Icon</title></head>
+<body>
+<canvas id="c" width="180" height="180"></canvas>
+<br><button onclick="d()">💾 Download PNG</button>
+<script>
+let c=document.getElementById('c');
+let x=c.getContext('2d');
+
+// Purple gradient background
+let g=x.createLinearGradient(0,0,180,180);
+g.addColorStop(0,'#667eea');
+g.addColorStop(1,'#764ba2');
+x.fillStyle=g;
+x.fillRect(0,0,180,180);
+
+// Camera body (dark gray)
+x.fillStyle='#333';
+x.fillRect(30,70,120,70);
+x.fillRect(60,50,60,25);
+
+// Lens (black circle)
+x.beginPath();
+x.arc(90,105,30,0,2*Math.PI);
+x.fillStyle='#000';
+x.fill();
+
+// Lens inner (darker)
+x.beginPath();
+x.arc(90,105,20,0,2*Math.PI);
+x.fillStyle='#111';
+x.fill();
+
+// Flash (white rectangle)
+x.fillStyle='#fff';
+x.fillRect(125,75,15,10);
+
+// Shutter button
+x.beginPath();
+x.arc(40,60,5,0,2*Math.PI);
+x.fillStyle='#666';
+x.fill();
+
+function d(){
+let a=document.createElement('a');
+a.download='camera-icon-180.png';
+a.href=c.toDataURL();
+a.click();
+alert('📱 Завантажено camera-icon-180.png!\n\n1. Покладіть файл в папку проекту\n2. Оновіть index.html');
+}
+</script>
+</body>
+</html>
