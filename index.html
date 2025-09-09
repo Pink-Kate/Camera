@@ -10,20 +10,26 @@
     <title>📸 Фотокамера</title>
     <link rel="stylesheet" href="style.css?v=46&buttons=grey">
 
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json?v=ios-fix-2024">
     <link rel="icon" type="image/svg+xml" href="/camera-icon.svg">
     
     <!-- iOS PWA підтримка з PNG файлом -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/camera-icon-180.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Camera">
+    <link rel="apple-touch-icon" sizes="180x180" href="/camera-icon-180.png?v=ios-fix">
+    <link rel="apple-touch-icon" sizes="152x152" href="/camera-icon-180.png?v=ios-fix">
+    <link rel="apple-touch-icon" sizes="167x167" href="/camera-icon-180.png?v=ios-fix">
+    <link rel="apple-touch-icon" sizes="120x120" href="/camera-icon-180.png?v=ios-fix">
+    <link rel="apple-touch-icon" href="/camera-icon-180.png?v=ios-fix">
     
-    <!-- Додаткові іконки для різних розмірів iOS -->
-    <link rel="apple-touch-icon" href="/camera-icon-180.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/camera-icon-180.png">
-    <link rel="apple-touch-icon" sizes="167x167" href="/camera-icon-180.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="/camera-icon-180.png">
+    <!-- iOS специфічні мета-теги -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="📸 Камера">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="apple-mobile-web-app-orientations" content="portrait">
+    
+    <!-- Підтримка різних пристроїв iOS -->
+    <link rel="apple-touch-startup-image" href="/camera-icon-180.png?v=ios-fix">
+    <meta name="apple-touch-icon-precomposed" href="/camera-icon-180.png?v=ios-fix">
     
     <!-- Safari Pinned Tab -->
     <link rel="mask-icon" href="/camera-icon.svg" color="#667eea">
@@ -37,8 +43,6 @@
     
     <!-- Додаткові iOS мета-теги -->
     <meta name="format-detection" content="telephone=no">
-    <meta name="apple-touch-fullscreen" content="yes">
-    <meta name="apple-mobile-web-app-orientations" content="portrait">
 </head>
 <body>
     <div class="container">

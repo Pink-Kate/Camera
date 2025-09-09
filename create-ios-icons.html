@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Створення іконок для iOS</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+        .icon-creator {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .canvas-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .icon-item {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .icon-item h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1rem;
+        }
+        canvas {
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .download-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        .download-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        .control-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .download-all-btn {
+            background: #FF6B6B;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        .download-all-btn:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Створення iOS іконок</h1>
+        
+        <div class="control-panel">
+            <button class="download-all-btn" onclick="downloadAllIcons()">
+                📦 Завантажити всі іконки
+            </button>
+        </div>
+        
+        <div class="icon-creator">
+            <div class="canvas-container" id="canvasContainer">
+                <!-- Іконки будуть створені тут -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Розміри іконок для iOS
+        const iconSizes = [
+            { size: 57, name: 'iPhone (iOS 6 і нижче)' },
+            { size: 60, name: 'iPhone (iOS 7+) @1x' },
+            { size: 72, name: 'iPad (iOS 6 і нижче)' },
+            { size: 76, name: 'iPad (iOS 7+) @1x' },
+            { size: 114, name: 'iPhone (iOS 6 і нижче) @2x' },
+            { size: 120, name: 'iPhone (iOS 7+) @2x' },
+            { size: 144, name: 'iPad (iOS 6 і нижче) @2x' },
+            { size: 152, name: 'iPad (iOS 7+) @2x' },
+            { size: 167, name: 'iPad Pro @2x' },
+            { size: 180, name: 'iPhone @3x' },
+            { size: 192, name: 'Android' },
+            { size: 512, name: 'App Store' }
+        ];
+
+        function createCameraIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Очистити канвас
+            ctx.clearRect(0, 0, size, size);
+            
+            // Фон з градієнтом
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            
+            // Закруглений квадрат
+            const radius = size * 0.18;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, radius);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Тіло камери
+            const bodyWidth = size * 0.6;
+            const bodyHeight = size * 0.45;
+            const bodyX = (size - bodyWidth) / 2;
+            const bodyY = size * 0.35;
+            
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.roundRect(bodyX, bodyY, bodyWidth, bodyHeight, size * 0.08);
+            ctx.fill();
+            
+            // Об'єктив
+            const lensRadius = size * 0.15;
+            const lensX = size / 2;
+            const lensY = bodyY + bodyHeight / 2;
+            
+            // Зовнішнє кільце об'єктива
+            ctx.fillStyle = '#555';
+            ctx.beginPath();
+            ctx.arc(lensX, lensY, lensRadius + size * 0.03, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Об'єктив
+            ctx.fillStyle = '#222';
+            ctx.beginPath();
+            ctx.arc(lensX, lensY, lensRadius, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Внутрішнє скло об'єктива
+            const innerGradient = ctx.createRadialGradient(lensX, lensY, 0, lensX, lensY, lensRadius);
+            innerGradient.addColorStop(0, '#4a90e2');
+            innerGradient.addColorStop(0.7, '#2c5aa0');
+            innerGradient.addColorStop(1, '#1a365d');
+            
+            ctx.fillStyle = innerGradient;
+            ctx.beginPath();
+            ctx.arc(lensX, lensY, lensRadius * 0.8, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Відблиск на об'єктиві
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.beginPath();
+            ctx.arc(lensX - lensRadius * 0.3, lensY - lensRadius * 0.3, lensRadius * 0.25, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Спалах
+            const flashSize = size * 0.06;
+            const flashX = bodyX + bodyWidth * 0.8;
+            const flashY = bodyY + bodyHeight * 0.25;
+            
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(flashX, flashY, flashSize, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Видошукач
+            const viewfinderWidth = size * 0.12;
+            const viewfinderHeight = size * 0.08;
+            const viewfinderX = bodyX + bodyWidth * 0.25;
+            const viewfinderY = bodyY + bodyHeight * 0.15;
+            
+            ctx.fillStyle = '#222';
+            ctx.beginPath();
+            ctx.roundRect(viewfinderX, viewfinderY, viewfinderWidth, viewfinderHeight, size * 0.02);
+            ctx.fill();
+            
+            // Кнопка затвора
+            const shutterSize = size * 0.04;
+            const shutterX = bodyX + bodyWidth * 0.75;
+            const shutterY = bodyY - size * 0.05;
+            
+            ctx.fillStyle = '#666';
+            ctx.beginPath();
+            ctx.arc(shutterX, shutterY, shutterSize, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function createIconItem(size, name) {
+            const container = document.getElementById('canvasContainer');
+            
+            const iconItem = document.createElement('div');
+            iconItem.className = 'icon-item';
+            
+            const title = document.createElement('h3');
+            title.textContent = `${size}×${size}px`;
+            
+            const subtitle = document.createElement('p');
+            subtitle.textContent = name;
+            subtitle.style.margin = '0 0 10px 0';
+            subtitle.style.fontSize = '0.8rem';
+            subtitle.style.opacity = '0.8';
+            
+            const canvas = document.createElement('canvas');
+            canvas.id = `icon-${size}`;
+            
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'download-btn';
+            downloadBtn.textContent = '⬇️ Завантажити';
+            downloadBtn.onclick = () => downloadIcon(canvas, size);
+            
+            createCameraIcon(canvas, size);
+            
+            iconItem.appendChild(title);
+            iconItem.appendChild(subtitle);
+            iconItem.appendChild(canvas);
+            iconItem.appendChild(downloadBtn);
+            
+            container.appendChild(iconItem);
+        }
+
+        function downloadIcon(canvas, size) {
+            const link = document.createElement('a');
+            link.download = `camera-icon-${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadAllIcons() {
+            iconSizes.forEach((iconInfo, index) => {
+                setTimeout(() => {
+                    const canvas = document.getElementById(`icon-${iconInfo.size}`);
+                    if (canvas) {
+                        downloadIcon(canvas, iconInfo.size);
+                    }
+                }, index * 100); // Затримка між завантаженнями
+            });
+        }
+
+        // Ініціалізація
+        document.addEventListener('DOMContentLoaded', () => {
+            iconSizes.forEach(iconInfo => {
+                createIconItem(iconInfo.size, iconInfo.name);
+            });
+        });
+
+        // Підтримка roundRect для старих браузерів
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radius) {
+                if (width < 2 * radius) radius = width / 2;
+                if (height < 2 * radius) radius = height / 2;
+                this.beginPath();
+                this.moveTo(x + radius, y);
+                this.arcTo(x + width, y, x + width, y + height, radius);
+                this.arcTo(x + width, y + height, x, y + height, radius);
+                this.arcTo(x, y + height, x, y, radius);
+                this.arcTo(x, y, x + width, y, radius);
+                this.closePath();
+                return this;
+            };
+        }
+    </script>
+</body>
+</html>
