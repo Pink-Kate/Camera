@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Виправлення іконок</title>
+    <style>
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 50px;
+        }
+        .btn { 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            padding: 20px 40px; 
+            font-size: 1.5rem; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            margin: 20px;
+        }
+        canvas { margin: 10px; border: 2px solid white; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Виправлення білої іконки</h1>
+    <p>Натисніть кнопку для створення PNG іконок камери</p>
+    
+    <button class="btn" onclick="generateIcons()">📸 Створити іконки камери</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        function createIcon(size) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Фон
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(0.5, '#764ba2');
+            gradient.addColorStop(1, '#5a67d8');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size/2 - 2, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Камера
+            const bodyW = size * 0.5, bodyH = size * 0.35;
+            const bodyX = (size - bodyW) / 2, bodyY = size * 0.45;
+            
+            ctx.fillStyle = '#333';
+            ctx.fillRect(bodyX, bodyY, bodyW, bodyH);
+            
+            // Об'єктив
+            const lensR = size * 0.14, lensX = size / 2, lensY = bodyY + bodyH / 2;
+            
+            ctx.fillStyle = '#555';
+            ctx.beginPath();
+            ctx.arc(lensX, lensY, lensR + size * 0.015, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.fillStyle = '#1a1a2e';
+            ctx.beginPath();
+            ctx.arc(lensX, lensY, lensR, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Відблиск
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.beginPath();
+            ctx.arc(lensX - lensR * 0.3, lensY - lensR * 0.3, lensR * 0.3, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Спалах
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(bodyX + bodyW * 0.8, bodyY + bodyH * 0.3, size * 0.04, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            return canvas;
+        }
+        
+        function downloadIcon(canvas, size) {
+            const link = document.createElement('a');
+            link.download = `camera-icon-${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function generateIcons() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<h2>📥 Створення іконок...</h2>';
+            
+            const sizes = [120, 152, 180];
+            
+            sizes.forEach((size, index) => {
+                setTimeout(() => {
+                    const canvas = createIcon(size);
+                    canvas.style.width = '60px';
+                    canvas.style.height = '60px';
+                    result.appendChild(canvas);
+                    
+                    downloadIcon(canvas, size);
+                    
+                    if (index === sizes.length - 1) {
+                        result.innerHTML += '<h3 style="color: #4CAF50;">✅ Іконки створено!</h3><p>Скопіюйте завантажені файли у папку "камерас"<br>Потім оновіть сторінку камери</p>';
+                    }
+                }, index * 500);
+            });
+        }
+    </script>
+</body>
+</html>
