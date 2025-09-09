@@ -428,6 +428,40 @@
                             });
                     });
                 }
+                
+                // Додатковий обробник для запуску камери
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Повідомлення користувачу про стан камери
+                    setTimeout(() => {
+                        if (typeof app !== 'undefined' && app.video && app.video.videoWidth === 0) {
+                            console.log('📷 Камера не запустилася автоматично, показуємо підказку');
+                            
+                            // Показуємо підказку користувачу
+                            const hint = document.createElement('div');
+                            hint.style.cssText = `
+                                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                                background: rgba(0,0,0,0.9); color: white; padding: 20px;
+                                border-radius: 15px; text-align: center; z-index: 9999;
+                                max-width: 90%; font-size: 1.1rem; backdrop-filter: blur(10px);
+                            `;
+                            hint.innerHTML = `
+                                <h3>📸 Налаштування камери</h3>
+                                <p>Для роботи камери потрібен дозвіл</p>
+                                <button onclick="this.parentElement.remove(); app.requestCameraPermissionManual();" 
+                                        style="background: #4CAF50; color: white; border: none; padding: 10px 20px; 
+                                               border-radius: 8px; font-size: 1rem; cursor: pointer; margin-top: 10px;">
+                                    🎥 Дозволити доступ до камери
+                                </button>
+                                <button onclick="this.parentElement.remove();" 
+                                        style="background: #666; color: white; border: none; padding: 10px 20px; 
+                                               border-radius: 8px; font-size: 1rem; cursor: pointer; margin: 10px 0 0 10px;">
+                                    Закрити
+                                </button>
+                            `;
+                            document.body.appendChild(hint);
+                        }
+                    }, 3000);
+                });
             </script>
 </body>
 </html>
