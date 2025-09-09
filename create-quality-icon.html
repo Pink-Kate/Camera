@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Створення якісної іконки камери</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 600px;
+        }
+        h1 {
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+        canvas {
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            margin: 20px;
+            background: white;
+        }
+        .download-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        .download-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        .canvas-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .canvas-item {
+            text-align: center;
+        }
+        .canvas-item h3 {
+            margin: 10px 0;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 Створення якісної іконки</h1>
+        
+        <div class="canvas-group">
+            <div class="canvas-item">
+                <h3>180×180 (основна)</h3>
+                <canvas id="icon180" width="180" height="180"></canvas>
+                <br>
+                <button class="download-btn" onclick="downloadIcon('icon180', 180)">
+                    ⬇️ Завантажити 180px
+                </button>
+            </div>
+            
+            <div class="canvas-item">
+                <h3>120×120</h3>
+                <canvas id="icon120" width="120" height="120"></canvas>
+                <br>
+                <button class="download-btn" onclick="downloadIcon('icon120', 120)">
+                    ⬇️ Завантажити 120px
+                </button>
+            </div>
+            
+            <div class="canvas-item">
+                <h3>152×152</h3>
+                <canvas id="icon152" width="152" height="152"></canvas>
+                <br>
+                <button class="download-btn" onclick="downloadIcon('icon152', 152)">
+                    ⬇️ Завантажити 152px
+                </button>
+            </div>
+        </div>
+        
+        <button class="download-btn" onclick="downloadAllIcons()" style="background: #FF6B6B; font-size: 1.3rem;">
+            📦 Завантажити всі іконки
+        </button>
+    </div>
+
+    <script>
+        function createHighQualityCameraIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Увімкнути згладжування
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
+            // Очистити канвас білим фоном
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Створити круглий фон з градієнтом
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(0.5, '#764ba2');
+            gradient.addColorStop(1, '#5a67d8');
+            
+            // Малюємо круглий фон
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size/2 - 4, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Додаємо легкий градієнт по краях
+            const edgeGradient = ctx.createRadialGradient(size/2, size/2, size/2 - 20, size/2, size/2, size/2);
+            edgeGradient.addColorStop(0, 'rgba(255,255,255,0.1)');
+            edgeGradient.addColorStop(1, 'rgba(0,0,0,0.1)');
+            ctx.fillStyle = edgeGradient;
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size/2 - 4, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Тіло камери
+            const bodyWidth = size * 0.55;
+            const bodyHeight = size * 0.4;
+            const bodyX = (size - bodyWidth) / 2;
+            const bodyY = size * 0.4;
+            
+            // Тінь під камерою
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.beginPath();
+            ctx.roundRect(bodyX + 2, bodyY + 2, bodyWidth, bodyHeight, size * 0.06);
+            ctx.fill();
+            
+            // Тіло камери
+            const bodyGradient = ctx.createLinearGradient(bodyX, bodyY, bodyX, bodyY + bodyHeight);
+            bodyGradient.addColorStop(0, '#4a4a4a');
+            bodyGradient.addColorStop(0.5, '#2a2a2a');
+            bodyGradient.addColorStop(1, '#1a1a1a');
+            
+            ctx.fillStyle = bodyGradient;
+            ctx.beginPath();
+            ctx.roundRect(bodyX, bodyY, bodyWidth, bodyHeight, size * 0.06);
+            ctx.fill();
+            
+            // Верхня частина камери (горбик)
+            const topWidth = size * 0.3;
+            const topHeight = size * 0.15;
+            const topX = bodyX + (bodyWidth - topWidth) / 2;
+            const topY = bodyY - topHeight * 0.7;
+            
+            ctx.fillStyle = bodyGradient;
+            ctx.beginPath();
+            ctx.roundRect(topX, topY, topWidth, topHeight, size * 0.04);
+            ctx.fill();
+            
+            // Об'єктив - зовнішнє кільце
+            const lensRadius = size * 0.16;
+            const lensX = size / 2;
+            const lensY = bodyY + bodyHeight / 2;
+            
+            // Тінь об'єктива
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.beginPath();
+            ctx.arc(lensX + 1, lensY + 1, lensRadius + size * 0.02, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Зовнішнє кільце
+            const ringGradient = ctx.createRadialGradient(lensX, lensY, 0, lensX, lensY, lensRadius + size * 0.02);
+            ringGradient.addColorStop(0, '#666');
+            ringGradient.addColorStop(0.8, '#333');
+            ringGradient.addColorStop(1, '#111');
+            
+            ctx.fillStyle = ringGradient;
+            ctx.beginPath();
+            ctx.arc(lensX, lensY, lensRadius + size * 0.02, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Внутрішній об'єктив
+            const lensGradient = ctx.createRadialGradient(lensX, lensY, 0, lensX, lensY, lensRadius);
+            lensGradient.addColorStop(0, '#1a1a2e');
+            lensGradient.addColorStop(0.3, '#16213e');
+            lensGradient.addColorStop(0.7, '#0f3460');
+            lensGradient.addColorStop(1, '#1a1a2e');
+            
+            ctx.fillStyle = lensGradient;
+            ctx.beginPath();
+            ctx.arc(lensX, lensY, lensRadius, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Внутрішнє скло об'єктива
+            const glassGradient = ctx.createRadialGradient(lensX, lensY, 0, lensX, lensY, lensRadius * 0.7);
+            glassGradient.addColorStop(0, 'rgba(100, 149, 237, 0.8)');
+            glassGradient.addColorStop(0.5, 'rgba(65, 105, 225, 0.6)');
+            glassGradient.addColorStop(1, 'rgba(25, 25, 112, 0.4)');
+            
+            ctx.fillStyle = glassGradient;
+            ctx.beginPath();
+            ctx.arc(lensX, lensY, lensRadius * 0.7, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Відблиск на об'єктиві
+            const reflectionGradient = ctx.createRadialGradient(
+                lensX - lensRadius * 0.3, lensY - lensRadius * 0.3, 0,
+                lensX - lensRadius * 0.3, lensY - lensRadius * 0.3, lensRadius * 0.4
+            );
+            reflectionGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+            reflectionGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            
+            ctx.fillStyle = reflectionGradient;
+            ctx.beginPath();
+            ctx.arc(lensX - lensRadius * 0.3, lensY - lensRadius * 0.3, lensRadius * 0.4, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Спалах
+            const flashSize = size * 0.05;
+            const flashX = bodyX + bodyWidth * 0.8;
+            const flashY = bodyY + bodyHeight * 0.3;
+            
+            // Тінь спалаху
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.beginPath();
+            ctx.arc(flashX + 1, flashY + 1, flashSize, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Спалах
+            const flashGradient = ctx.createRadialGradient(flashX, flashY, 0, flashX, flashY, flashSize);
+            flashGradient.addColorStop(0, '#ffffff');
+            flashGradient.addColorStop(0.7, '#f0f0f0');
+            flashGradient.addColorStop(1, '#d0d0d0');
+            
+            ctx.fillStyle = flashGradient;
+            ctx.beginPath();
+            ctx.arc(flashX, flashY, flashSize, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Видошукач
+            const viewfinderWidth = size * 0.1;
+            const viewfinderHeight = size * 0.06;
+            const viewfinderX = bodyX + bodyWidth * 0.2;
+            const viewfinderY = bodyY + bodyHeight * 0.25;
+            
+            // Тінь видошукача
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(viewfinderX + 1, viewfinderY + 1, viewfinderWidth, viewfinderHeight);
+            
+            // Видошукач
+            ctx.fillStyle = '#111';
+            ctx.fillRect(viewfinderX, viewfinderY, viewfinderWidth, viewfinderHeight);
+            
+            // Кнопка затвора
+            const shutterSize = size * 0.035;
+            const shutterX = topX + topWidth * 0.7;
+            const shutterY = topY + topHeight * 0.5;
+            
+            // Тінь кнопки
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.beginPath();
+            ctx.arc(shutterX + 1, shutterY + 1, shutterSize, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Кнопка
+            const buttonGradient = ctx.createRadialGradient(shutterX, shutterY, 0, shutterX, shutterY, shutterSize);
+            buttonGradient.addColorStop(0, '#888');
+            buttonGradient.addColorStop(0.7, '#555');
+            buttonGradient.addColorStop(1, '#333');
+            
+            ctx.fillStyle = buttonGradient;
+            ctx.beginPath();
+            ctx.arc(shutterX, shutterY, shutterSize, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Додати логотип або символ камери
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.font = `${size * 0.15}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText('📸', size / 2, size * 0.25);
+        }
+
+        function downloadIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = `camera-icon-${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadAllIcons() {
+            const sizes = [180, 120, 152];
+            sizes.forEach((size, index) => {
+                setTimeout(() => {
+                    downloadIcon(`icon${size}`, size);
+                }, index * 200);
+            });
+        }
+
+        // Підтримка roundRect для старих браузерів
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radius) {
+                if (width < 2 * radius) radius = width / 2;
+                if (height < 2 * radius) radius = height / 2;
+                this.beginPath();
+                this.moveTo(x + radius, y);
+                this.arcTo(x + width, y, x + width, y + height, radius);
+                this.arcTo(x + width, y + height, x, y + height, radius);
+                this.arcTo(x, y + height, x, y, radius);
+                this.arcTo(x, y, x + width, y, radius);
+                this.closePath();
+                return this;
+            };
+        }
+
+        // Ініціалізація
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas180 = document.getElementById('icon180');
+            const canvas120 = document.getElementById('icon120');
+            const canvas152 = document.getElementById('icon152');
+            
+            createHighQualityCameraIcon(canvas180, 180);
+            createHighQualityCameraIcon(canvas120, 120);
+            createHighQualityCameraIcon(canvas152, 152);
+        });
+    </script>
+</body>
+</html>
