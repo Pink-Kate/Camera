@@ -103,6 +103,20 @@
                         </button>
                     </div>
                     
+                    <!-- Кнопка встановлення PWA -->
+                    <div class="pwa-install-prompt" id="pwaInstallPrompt" style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 1002; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px); border-radius: 15px; padding: 15px 20px; color: white; display: none; border: 1px solid rgba(255, 255, 255, 0.2); min-width: 280px; text-align: center;">
+                        <div style="margin-bottom: 10px; font-size: 1.1rem;">📱 Встановити на екран</div>
+                        <div style="font-size: 0.9rem; margin-bottom: 15px; opacity: 0.8;">Отримайте швидкий доступ до камери!</div>
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <button id="installPwaBtn" class="btn-style-1" style="background: #4CAF50; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; cursor: pointer;">
+                                Встановити
+                            </button>
+                            <button id="dismissPwaBtn" class="btn-style-2" style="background: #666; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; cursor: pointer;">
+                                Пізніше
+                            </button>
+                        </div>
+                    </div>
+                    
                     <!-- Індикатор камери -->
                     <div class="camera-indicator">
                         <div class="camera-dot"></div>
@@ -241,6 +255,9 @@
                         </button>
                         <button id="clearPermissionBtn" class="btn btn-secondary btn-style-2" onclick="app.clearAllPermissions()" style="margin-left: 10px;">
                             🗑️ Очистити дозволи
+                        </button>
+                        <button id="installAppBtn" class="btn btn-primary btn-style-1" onclick="app.showInstallPrompt()" style="margin-left: 10px; display: none;">
+                            📱 Встановити додаток
                         </button>
                         <div class="permission-status" id="permissionStatus">
                             <span class="permission-indicator" id="permissionIndicator">🔴</span>

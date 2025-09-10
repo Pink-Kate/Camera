@@ -81,6 +81,13 @@ class CameraApp {
         this.currentEvent = null;
         this.metadataVisible = false;
         
+        // PWA встановлення
+        this.deferredPrompt = null;
+        this.pwaInstallPrompt = document.getElementById('pwaInstallPrompt');
+        this.installPwaBtn = document.getElementById('installPwaBtn');
+        this.dismissPwaBtn = document.getElementById('dismissPwaBtn');
+        this.installAppBtn = document.getElementById('installAppBtn');
+        
         this.init();
     }
     
@@ -155,6 +162,30 @@ class CameraApp {
         // Обробник для закриття налаштувань
         this.closeSettingsBtn.addEventListener('click', () => this.closeSettings());
         
+        // PWA обробники
+        if (this.installPwaBtn) {
+            this.installPwaBtn.addEventListener('click', () => this.installPWA());
+        }
+        if (this.dismissPwaBtn) {
+            this.dismissPwaBtn.addEventListener('click', () => this.dismissInstallPrompt());
+        }
+        
+        // Обробник для beforeinstallprompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('📱 PWA: beforeinstallprompt event fired');
+            e.preventDefault();
+            this.deferredPrompt = e;
+            this.showInstallPrompt();
+        });
+        
+        // Обробник для appinstalled
+        window.addEventListener('appinstalled', () => {
+            console.log('📱 PWA: App was installed');
+            this.hideInstallPrompt();
+            this.showSuccess('📱 Додаток успішно встановлено!');
+            this.deferredPrompt = null;
+        });
+        
         // Обробники для налаштувань
         document.getElementById('autoSave').addEventListener('change', (e) => this.updateSetting('autoSave', e.target.checked));
         document.getElementById('autoSaveToDevice').addEventListener('change', (e) => this.updateSetting('autoSaveToDevice', e.target.checked));
@@ -198,6 +229,9 @@ class CameraApp {
         
         // Додаємо обробник для відстеження змін дозволів
         this.setupPermissionWatcher();
+        
+        // Перевірка PWA статусу
+        this.checkPWAStatus();
         
         // Оновлюємо статус дозволу в UI
         this.updatePermissionStatus();
@@ -1577,7 +1611,10 @@ class CameraApp {
             // Без підказок для iOS
         }
         
-        this.displayPhoto(photo);
+        // Додаємо затримку для кращого відображення
+        setTimeout(() => {
+            this.displayPhoto(photo);
+        }, 100);
         
         // Показуємо анімацію
         this.showCaptureAnimation();
@@ -1834,53 +1871,94 @@ class CameraApp {
 
     async savePhotoToPhone(photo) {
         try {
+            console.log('💾 Збереження фото на телефон:', photo.filename);
+            
             // Конвертуємо base64 в Blob
             const response = await fetch(photo.data);
             const blob = await response.blob();
             
+            console.log('💾 Blob створено, розмір:', blob.size, 'bytes');
+            
             // Створюємо файл з іменем
             const file = new File([blob], photo.filename, { type: 'image/jpeg' });
             
-            // Для мобільних пристроїв використовуємо автоматичне завантаження
-            const url = URL.createObjectURL(file);
+            // Спробуємо використати новий File System Access API якщо доступний
+            if ('showSaveFilePicker' in window && !(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))) {
+                try {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: photo.filename,
+                        types: [{
+                            description: 'JPEG Image',
+                            accept: { 'image/jpeg': ['.jpg', '.jpeg'] }
+                        }]
+                    });
+                    
+                    const writable = await handle.createWritable();
+                    await writable.write(file);
+                    await writable.close();
+                    
+                    console.log('💾 Файл збережено через File System Access API');
+                    this.showSuccess(`💾 Фото "${photo.filename}" збережено!`);
+                    return true;
+                } catch (fsError) {
+                    console.log('💾 File System Access API недоступний, використовуємо fallback');
+                }
+            }
+            
+            // Fallback: використовуємо стандартне завантаження
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = photo.filename;
             a.style.display = 'none';
             
-            // Додаємо атрибути для мобільних браузерів
-            a.setAttribute('target', '_blank');
-            a.setAttribute('rel', 'noopener');
-            
+            // Додаємо до DOM
             document.body.appendChild(a);
             
-            // Для мобільних пристроїв використовуємо різні методи
-            if (/Android/i.test(navigator.userAgent)) {
-                // Android - прямий клік
-                const clickEvent = new MouseEvent('click', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true
-                });
-                a.dispatchEvent(clickEvent);
-            } else if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-                // iOS - просто спробуємо автоматичний клік
+            // Симулюємо клік для завантаження
+            console.log('💾 Запускаємо завантаження через <a> тег');
+            
+            // Для різних платформ
+            if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                // iOS Safari - відкриваємо в новій вкладці
+                console.log('💾 iOS detected, opening in new tab');
+                a.target = '_blank';
+                a.click();
+                
+                // Показуємо інструкцію для iOS
+                setTimeout(() => {
+                    this.showInfo('📱 iOS: У новій вкладці натисніть "Поділитися" → "Зберегти в Файли"');
+                }, 1000);
+            } else if (/Android/i.test(navigator.userAgent)) {
+                // Android - прямий download
+                console.log('💾 Android detected, direct download');
+                a.click();
+            } else {
+                // Desktop та інші платформи
+                console.log('💾 Desktop/other platform, direct click');
                 a.click();
             }
             
-            a.click();
-            
-            // Очищаємо після невеликої затримки
+            // Очищуємо через деякий час
             setTimeout(() => {
-                document.body.removeChild(a);
+                if (document.body.contains(a)) {
+                    document.body.removeChild(a);
+                }
                 URL.revokeObjectURL(url);
-            }, 100);
+            }, 3000);
             
-            // Тихе збереження без повідомлень
+            console.log('💾 Збереження ініційовано успішно');
+            
+            // Показуємо різні повідомлення залежно від платформи
+            if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                this.showInfo(`📱 Фото "${photo.filename}" відкрито в новій вкладці для збереження`);
+            } else {
+                this.showSuccess(`📱 Завантаження фото "${photo.filename}" розпочато!`);
+            }
             return true;
             
         } catch (error) {
-            console.error('Помилка при збереженні на телефон:', error);
+            console.error('💾 Помилка збереження на телефон:', error);
             
             // Fallback: спробуємо використати Web Share API
             if (navigator.share && navigator.canShare) {
@@ -1904,8 +1982,15 @@ class CameraApp {
                 }
             }
             
-            if (this.settings.showNotifications) {
-                this.showError('Не вдалося автоматично зберегти на телефон. Спробуйте зберегти вручну.');
+            // Показуємо детальну помилку залежно від типу
+            if (error.name === 'NotAllowedError') {
+                this.showError('Збереження заблоковано браузером. Спробуйте дозволити завантаження файлів.');
+            } else if (error.name === 'SecurityError') {
+                this.showError('Помилка безпеки. Спробуйте оновити сторінку і повторити.');
+            } else if (error.message.includes('network')) {
+                this.showError('Помилка мережі. Перевірте з\'єднання з інтернетом.');
+            } else {
+                this.showError(`Не вдалося зберегти фото: ${error.message}`);
             }
             return false;
         }
@@ -2195,13 +2280,31 @@ class CameraApp {
         const galleryMain = document.getElementById('galleryMain');
         const galleryThumbs = document.getElementById('galleryThumbs');
         
+        if (!galleryMain || !galleryThumbs) {
+            console.error('Галерея не знайдена');
+            return;
+        }
+        
         // Створюємо елемент для основної галереї (великі фото)
         const mainPhotoElement = document.createElement('div');
         mainPhotoElement.className = 'photo-item';
+        
+        // Перевіряємо, чи зображення завантажується правильно
+        const testImg = new Image();
+        testImg.onload = () => {
+            console.log(`📸 Фото завантажено успішно: ${testImg.width}x${testImg.height}px`);
+        };
+        testImg.onerror = () => {
+            console.error('📸 Помилка завантаження фото');
+            this.showError('Помилка відображення фотографії');
+        };
+        testImg.src = photo.data;
+        
         mainPhotoElement.innerHTML = `
-            <img src="${photo.data}" alt="Фотографія" onclick="app.openPhotoViewer(${this.photos.indexOf(photo)})" style="cursor: pointer;">
-            <div class="photo-info">
-                ${new Date(photo.timestamp).toLocaleString('uk-UA')}
+            <img src="${photo.data}" alt="Фотографія ${photo.filename}" onclick="app.openPhotoViewer(${this.photos.indexOf(photo)})" style="cursor: pointer; max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" loading="lazy">
+            <div class="photo-info" style="padding: 8px; font-size: 0.9rem; color: #666;">
+                <div style="font-weight: bold; margin-bottom: 4px;">${photo.filename}</div>
+                <div>${new Date(photo.timestamp).toLocaleString('uk-UA')}</div>
             </div>
             <div class="photo-actions">
                 <button class="photo-action-btn save-btn" onclick="app.savePhotoToDevice(${JSON.stringify(photo)})" title="Зберегти на пристрій">💾</button>
@@ -2210,11 +2313,11 @@ class CameraApp {
             </div>
         `;
         
-        // Створюємо мініатюру
+        // Створюємо мініатюру з кращими стилями
         const thumbElement = document.createElement('div');
         thumbElement.className = 'photo-item';
         thumbElement.innerHTML = `
-            <img src="${photo.data}" alt="Фотографія" onclick="app.openPhotoViewer(${this.photos.indexOf(photo)})" style="cursor: pointer;">
+            <img src="${photo.data}" alt="Фотографія" onclick="app.openPhotoViewer(${this.photos.indexOf(photo)})" style="cursor: pointer; width: 100px; height: 100px; object-fit: cover; border-radius: 8px; transition: transform 0.2s;" loading="lazy" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
         `;
         
         // Додаємо на початок основної галереї (показуємо тільки останні 4 фото)
@@ -2225,6 +2328,10 @@ class CameraApp {
         
         // Додаємо в мініатюри
         galleryThumbs.insertBefore(thumbElement, galleryThumbs.firstChild);
+        
+        // Показуємо успішне повідомлення
+        console.log(`📸 Фото "${photo.filename}" додано до галереї`);
+        this.showSuccess(`📸 Фото збережено в галереї!`);
     }
     
     async sharePhoto(photo) {
@@ -2278,19 +2385,64 @@ class CameraApp {
         }
     }
     
-    downloadAllPhotos() {
+    async downloadAllPhotos() {
         if (this.photos.length === 0) {
             this.showError('Галерея порожня');
             return;
         }
         
-        // Створюємо ZIP архів (симуляція)
         this.showSuccess(`Завантаження ${this.photos.length} фотографій...`);
         
-        // В реальному додатку тут була б логіка для створення ZIP файлу
-        setTimeout(() => {
-            this.showSuccess('Фотографії успішно завантажено!');
-        }, 2000);
+        try {
+            // Завантажуємо кожне фото окремо
+            let downloadedCount = 0;
+            
+            for (let i = 0; i < this.photos.length; i++) {
+                const photo = this.photos[i];
+                
+                try {
+                    // Конвертуємо base64 в Blob
+                    const response = await fetch(photo.data);
+                    const blob = await response.blob();
+                    
+                    // Створюємо файл з іменем
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = photo.filename;
+                    a.style.display = 'none';
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // Очищуємо
+                    setTimeout(() => {
+                        if (document.body.contains(a)) {
+                            document.body.removeChild(a);
+                        }
+                        URL.revokeObjectURL(url);
+                    }, 1000);
+                    
+                    downloadedCount++;
+                    
+                    // Затримка між завантаженнями для стабільності
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                } catch (photoError) {
+                    console.error(`Помилка завантаження фото ${photo.filename}:`, photoError);
+                }
+            }
+            
+            if (downloadedCount > 0) {
+                this.showSuccess(`Успішно завантажено ${downloadedCount} з ${this.photos.length} фотографій!`);
+            } else {
+                this.showError('Не вдалося завантажити жодної фотографії');
+            }
+            
+        } catch (error) {
+            console.error('Помилка масового завантаження:', error);
+            this.showError('Помилка при завантаженні фотографій');
+        }
     }
     
     renderGallery() {
@@ -3269,7 +3421,10 @@ class CameraApp {
             // Без підказок для iOS
         }
         
-        this.displayPhoto(photo);
+        // Додаємо затримку для кращого відображення
+        setTimeout(() => {
+            this.displayPhoto(photo);
+        }, 100);
         
         // Показуємо анімацію
         this.showCaptureAnimation();
@@ -3318,6 +3473,121 @@ class CameraApp {
             this.permissionGranted = true;
             this.permissionChecked = true;
             this.showInfo('🍎 Дозволи зміцнено після фото');
+        }
+    }
+    
+    // PWA методи
+    showInstallPrompt() {
+        // Перевіряємо чи вже встановлено
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+            console.log('📱 PWA: App already installed');
+            this.hideInstallPrompt();
+            return;
+        }
+        
+        // Перевіряємо чи користувач раніше відхилив
+        const dismissed = localStorage.getItem('pwa_install_dismissed');
+        if (dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000) { // 7 днів
+            console.log('📱 PWA: Install prompt recently dismissed');
+            return;
+        }
+        
+        if (this.pwaInstallPrompt) {
+            this.pwaInstallPrompt.style.display = 'block';
+            console.log('📱 PWA: Showing install prompt');
+        }
+        
+        if (this.installAppBtn) {
+            this.installAppBtn.style.display = 'inline-block';
+        }
+        
+        // Автоматично ховаємо через 10 секунд
+        setTimeout(() => {
+            this.hideInstallPrompt();
+        }, 10000);
+    }
+    
+    hideInstallPrompt() {
+        if (this.pwaInstallPrompt) {
+            this.pwaInstallPrompt.style.display = 'none';
+        }
+        if (this.installAppBtn) {
+            this.installAppBtn.style.display = 'none';
+        }
+    }
+    
+    dismissInstallPrompt() {
+        this.hideInstallPrompt();
+        localStorage.setItem('pwa_install_dismissed', Date.now().toString());
+        console.log('📱 PWA: Install prompt dismissed by user');
+    }
+    
+    async installPWA() {
+        if (!this.deferredPrompt) {
+            console.log('📱 PWA: No deferred prompt available');
+            this.showError('Встановлення недоступне на цьому пристрої');
+            return;
+        }
+        
+        try {
+            console.log('📱 PWA: Starting installation');
+            this.hideInstallPrompt();
+            
+            // Показуємо нативний промпт
+            this.deferredPrompt.prompt();
+            
+            // Чекаємо на рішення користувача
+            const { outcome } = await this.deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                console.log('📱 PWA: User accepted the install prompt');
+                this.showSuccess('📱 Додаток встановлюється...');
+            } else {
+                console.log('📱 PWA: User dismissed the install prompt');
+                this.dismissInstallPrompt();
+            }
+            
+            // Очищуємо deferred prompt
+            this.deferredPrompt = null;
+            
+        } catch (error) {
+            console.error('📱 PWA: Installation error:', error);
+            this.showError('Помилка при встановленні додатку');
+        }
+    }
+    
+    checkPWAStatus() {
+        // Перевіряємо чи вже встановлено
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        
+        if (isStandalone) {
+            console.log('📱 PWA: App is running in standalone mode');
+            this.hideInstallPrompt();
+            return;
+        }
+        
+        // Для мобільних пристроїв показуємо промпт через деякий час
+        if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) {
+            setTimeout(() => {
+                if (!this.deferredPrompt) {
+                    console.log('📱 PWA: No deferred prompt, showing manual install hint');
+                    this.showManualInstallHint();
+                }
+            }, 5000); // Показуємо через 5 секунд
+        }
+    }
+    
+    showManualInstallHint() {
+        // Показуємо підказку для ручного встановлення
+        if (this.installAppBtn) {
+            this.installAppBtn.style.display = 'inline-block';
+        }
+        
+        // Для iOS Safari показуємо спеціальну підказку
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent) && /Safari/i.test(navigator.userAgent)) {
+            setTimeout(() => {
+                this.showInfo('📱 iOS: Для встановлення натисніть "Поділитися" → "На екран «Домівка»"');
+            }, 1000);
         }
     }
 
